@@ -1,0 +1,457 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import {
+  Download,
+  Trash2,
+  ChevronLeft,
+  FileText,
+  Code,
+  Loader2,
+  ExternalLink,
+  ZoomIn,
+  ZoomOut,
+  Image as ImageIcon,
+  Music,
+  Video as VideoIcon,
+} from "lucide-react"
+import { Button } from "./ui/button"
+import { createClient } from "@/lib/supabase/client"
+import type { File as FileType } from "@/types/database.types"
+import { 
+  getLanguageFromExtension, 
+  isCodeFile, 
+  formatFileSize,
+  isImageFile,
+  isAudioFile,
+  isVideoFile
+} from "@/lib/utils/file-utils"
+
+interface FileViewerProps {
+  file: FileType
+  signedUrl: string | null
+}
+
+export default function FileViewer({ file, signedUrl }: FileViewerProps) {
+  const [content, setContent] = useState<string>("")
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+  const router = useRouter()
+  const supabase = createClient()
+
+  const isPDF = file.mime_type === "application/pdf"
+  const isCode = isCodeFile(file.name)
+  const isImage = isImageFile(file.mime_type || "", file.name)
+  const isAudio = isAudioFile(file.mime_type || "", file.name)
+  const isVideo = isVideoFile(file.mime_type || "", file.name)
+
+  useEffect(() => {
+    // Detect dark mode
+    setIsDarkMode(window.matchMedia('(prefers-color-scheme: dark)').matches)
+    
+    // Media files (images, audio, video, PDFs) don't need content fetching
+    if (isPDF || isImage || isAudio || isVideo) {
+      setLoading(false)
+    } else if (signedUrl) {
+      fetchFileContent()
+    } else {
+      setError("Could not load file")
+      setLoading(false)
+    }
+  }, [signedUrl, isPDF, isImage, isAudio, isVideo])
+
+  const fetchFileContent = async () => {
+    try {
+      const response = await fetch(signedUrl!)
+      const text = await response.text()
+      setContent(text)
+    } catch (err) {
+      setError("Failed to load file content")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleDownload = () => {
+    if (signedUrl) {
+      const a = document.createElement("a")
+      a.href = signedUrl
+      a.download = file.name
+      a.click()
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete "${file.name}"?`)) return
+
+    setDeleting(true)
+
+    try {
+      // Delete embeddings first
+      await supabase
+        .from("embeddings")
+        .delete()
+        .eq("file_id", file.id)
+
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from("files")
+        .remove([file.storage_path])
+
+      if (storageError) throw storageError
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from("files")
+        .delete()
+        .eq("id", file.id)
+
+      if (dbError) throw dbError
+
+      // Navigate to parent folder
+      await navigateToParentFolder()
+    } catch (err: any) {
+      alert(`Failed to delete file: ${err.message}`)
+      setDeleting(false)
+    }
+  }
+
+  const navigateToParentFolder = async () => {
+    if (!file.folder_id) {
+      // File is in root, go to /vault
+      router.push("/vault")
+      router.refresh()
+      return
+    }
+
+    // Get folder path to navigate to the correct location
+    try {
+      const { data: folder } = await supabase
+        .from("folders")
+        .select("id, slug, parent_id")
+        .eq("id", file.folder_id)
+        .single()
+
+      if (!folder) {
+        router.push("/vault")
+        router.refresh()
+        return
+      }
+
+      // Build the full path by traversing up the folder hierarchy
+      const pathSegments: string[] = []
+      let currentFolder = folder
+
+      while (currentFolder) {
+        pathSegments.unshift(currentFolder.slug)
+        
+        if (!currentFolder.parent_id) break
+
+        const { data: parentFolder } = await supabase
+          .from("folders")
+          .select("id, slug, parent_id")
+          .eq("id", currentFolder.parent_id)
+          .single()
+
+        currentFolder = parentFolder
+      }
+
+      const folderPath = pathSegments.join("/")
+      router.push(`/vault/${folderPath}`)
+      router.refresh()
+    } catch (err) {
+      // If anything goes wrong, just go to root
+      router.push("/vault")
+      router.refresh()
+    }
+  }
+
+  const language = getLanguageFromExtension(file.name)
+
+  const renderContent = () => {
+    if (loading) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-zinc-400" />
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading file...</p>
+          </div>
+        </div>
+      )
+    }
+
+    if (error) {
+      return (
+        <div className="flex h-full items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        </div>
+      )
+    }
+
+    // Image viewer
+    if (isImage && signedUrl) {
+      return (
+        <div className="mx-auto max-w-5xl">
+          <div className="overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
+            <div className="flex items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
+              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                Image • {file.mime_type}
+              </span>
+            </div>
+            <div className="flex items-center justify-center bg-zinc-50 p-8 dark:bg-zinc-900">
+              <img
+                src={signedUrl}
+                alt={file.name}
+                className="max-h-[70vh] w-auto rounded-lg object-contain shadow-lg"
+              />
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Audio viewer
+    if (isAudio && signedUrl) {
+      return (
+        <div className="mx-auto max-w-5xl">
+          <div className="rounded-lg border border-black/10 bg-white p-8 dark:border-white/10 dark:bg-black">
+            <div className="mb-6 flex items-center gap-4">
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/20">
+                <Music className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <h3 className="font-semibold">{file.name}</h3>
+                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  {file.mime_type}
+                </p>
+              </div>
+            </div>
+            <audio
+              controls
+              className="w-full"
+              src={signedUrl}
+            >
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        </div>
+      )
+    }
+
+    // Video viewer
+    if (isVideo && signedUrl) {
+      return (
+        <div className="mx-auto max-w-5xl">
+          <div className="overflow-hidden rounded-lg border border-black/10 bg-black dark:border-white/10">
+            <video
+              controls
+              className="w-full"
+              src={signedUrl}
+            >
+              Your browser does not support the video element.
+            </video>
+          </div>
+        </div>
+      )
+    }
+
+    // PDF viewer
+    if (isPDF && signedUrl) {
+      return (
+        <div className="mx-auto h-full w-full max-w-5xl">
+          <div className="h-full rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
+            <iframe
+              src={signedUrl}
+              className="h-full w-full rounded-lg"
+              title={file.name}
+            />
+          </div>
+        </div>
+      )
+    }
+
+    // Code viewer
+    if (isCode) {
+      return (
+        <div className="mx-auto max-w-5xl">
+          <div className="overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
+            <div className="flex items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
+              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+                {language} • {content.split('\n').length} lines
+              </span>
+              {signedUrl && (
+                <a
+                  href={signedUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-xs text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                >
+                  Open in new tab
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </div>
+            <div className="overflow-x-auto bg-zinc-50 dark:bg-zinc-900">
+              <pre className="p-4">
+                <code className="text-sm font-mono leading-relaxed">{content.split('\n').map((line, i) => (
+                  <div key={i} className="flex">
+                    <span className="mr-4 inline-block w-12 select-none text-right text-zinc-400">
+                      {i + 1}
+                    </span>
+                    <span>{line || '\n'}</span>
+                  </div>
+                ))}</code>
+              </pre>
+            </div>
+          </div>
+        </div>
+      )
+    }
+
+    // Plain text
+    return (
+      <div className="mx-auto max-w-5xl">
+        <div className="rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
+          <div className="flex items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
+            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+              Plain Text
+            </span>
+            {signedUrl && (
+              <a
+                href={signedUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 text-xs text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+              >
+                Open in new tab
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+          <pre className="overflow-x-auto p-4">
+            <code className="text-sm">{content}</code>
+          </pre>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
+      {/* Header */}
+      <header className="flex h-16 items-center justify-between border-b border-black/10 bg-white px-6 dark:border-white/10 dark:bg-black">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => router.back()}
+            className="gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Back
+          </Button>
+          <div className="flex items-center gap-3">
+            {isCodeFile(file.name) ? (
+              <Code className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            ) : isImage ? (
+              <ImageIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
+            ) : isAudio ? (
+              <Music className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+            ) : isVideo ? (
+              <VideoIcon className="h-5 w-5 text-red-600 dark:text-red-400" />
+            ) : (
+              <FileText className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+            )}
+            <div>
+              <h1 className="font-semibold">{file.name}</h1>
+              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                {formatFileSize(file.size_bytes)} • {file.type}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          {file.embedding_status && (
+            <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs dark:bg-zinc-800">
+              Embeddings: <span className="font-medium">{file.embedding_status}</span>
+            </div>
+          )}
+          <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
+            <Download className="h-4 w-4" />
+            Download
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDelete}
+            disabled={deleting}
+            className="gap-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+          >
+            {deleting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4" />
+            )}
+            Delete
+          </Button>
+        </div>
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 overflow-auto p-6">
+        {renderContent()}
+
+        {/* Metadata */}
+        {!loading && !error && (
+          <div className="mx-auto mt-6 max-w-5xl rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
+            <h2 className="mb-3 font-semibold">File Information</h2>
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <dt className="text-zinc-600 dark:text-zinc-400">Created:</dt>
+                <dd className="font-medium">
+                  {new Date(file.created_at).toLocaleString()}
+                </dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-zinc-600 dark:text-zinc-400">Size:</dt>
+                <dd className="font-medium">{formatFileSize(file.size_bytes)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt className="text-zinc-600 dark:text-zinc-400">Type:</dt>
+                <dd className="font-medium">{file.mime_type}</dd>
+              </div>
+              {file.description && (
+                <div>
+                  <dt className="mb-1 text-zinc-600 dark:text-zinc-400">Description:</dt>
+                  <dd className="font-medium">{file.description}</dd>
+                </div>
+              )}
+              {file.tags && file.tags.length > 0 && (
+                <div>
+                  <dt className="mb-1 text-zinc-600 dark:text-zinc-400">Tags:</dt>
+                  <dd className="flex flex-wrap gap-2">
+                    {file.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="rounded-full bg-zinc-100 px-2 py-1 text-xs dark:bg-zinc-800"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
