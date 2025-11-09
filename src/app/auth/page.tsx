@@ -1,16 +1,18 @@
 // @ts-nocheck
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
+  const searchParams = useSearchParams()
+  const mode = searchParams.get("mode")
+  const [isLogin, setIsLogin] = useState(mode !== "signup")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
@@ -18,6 +20,15 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // Update isLogin state when URL changes
+  useEffect(() => {
+    if (mode === "signup") {
+      setIsLogin(false)
+    } else if (mode === "signin") {
+      setIsLogin(true)
+    }
+  }, [mode])
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()

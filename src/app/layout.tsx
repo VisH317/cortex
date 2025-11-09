@@ -6,8 +6,8 @@ import { Activity, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
-  title: "Cortex - AI Medical Records",
-  description: "AI-powered medical records management for doctors",
+  title: "Cortex - Your Doctor's Second Brain",
+  description: "AI-powered medical records that think with you. Instant insights, intelligent search, and research at your fingertips.",
 }
 
 export default async function RootLayout({
