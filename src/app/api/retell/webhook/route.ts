@@ -331,11 +331,11 @@ export async function GET() {
 }
 
 // Disable body size limit for transcripts
-export const config = {
-  api: {
-    bodyParser: {
-      sizeLimit: "10mb",
-    },
-  },
-}
+// export const config = {
+//   api: {
+//     bodyParser: {
+//       sizeLimit: "10mb",
+//     },
+//   },
+// }
 
