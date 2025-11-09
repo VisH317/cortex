@@ -1,15 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
+  const searchParams = useSearchParams()
+  const mode = searchParams.get("mode")
+  const [isLogin, setIsLogin] = useState(mode !== "signup")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [fullName, setFullName] = useState("")
@@ -17,6 +19,15 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  // Update isLogin state when URL changes
+  useEffect(() => {
+    if (mode === "signup") {
+      setIsLogin(false)
+    } else if (mode === "signin") {
+      setIsLogin(true)
+    }
+  }, [mode])
 
   const handleEmailAuth = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -101,7 +112,7 @@ export default function AuthPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-orange-500 shadow-lg">
             <Activity className="h-7 w-7 text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">MedVault</span>
+          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Cortex</span>
         </Link>
 
         {/* Auth Card */}

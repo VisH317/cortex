@@ -6,8 +6,8 @@ import { Activity, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export const metadata: Metadata = {
-  title: "MedVault - AI Medical Records",
-  description: "AI-powered medical records management for doctors",
+  title: "Cortex - Your Doctor's Second Brain",
+  description: "AI-powered medical records that think with you. Instant insights, intelligent search, and research at your fingertips.",
 }
 
 export default async function RootLayout({
@@ -28,7 +28,7 @@ export default async function RootLayout({
                 <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-orange-500 shadow-md">
                   <Activity className="h-5 w-5 text-white" strokeWidth={2.5} />
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">MedVault</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Cortex</span>
               </Link>
               <div className="flex items-center gap-4">
                 <span className="text-sm text-gray-600 font-medium">
