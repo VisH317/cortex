@@ -160,7 +160,7 @@ For questions or concerns, please contact your healthcare provider.
         mime_type: "text/plain",
         size_bytes: fileContent.length,
         storage_path: storagePath,
-        description: `Medical consultation call transcript from ${formattedDate}`,
+        // description: `Medical consultation call transcript from ${formattedDate}`,
         embedding_status: "pending",
       } as any)
       .select()
