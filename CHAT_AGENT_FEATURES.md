@@ -1,4 +1,4 @@
-# MedVault Chat Agent Features
+# Cortex Chat Agent Features
 
 ## Enhanced Context-Aware AI Assistant
 

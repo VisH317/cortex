@@ -9,7 +9,7 @@
 - **TypeScript Types**: Full type safety for all patient-related operations
 
 ### 2. Landing & Authentication
-- **Rebranded Landing Page**: Changed from "SynapseVault" to "MedVault" with medical-themed icons and copy
+- **Rebranded Landing Page**: Changed from "SynapseVault" to "Cortex" with medical-themed icons and copy
 - **Medical Focus**: Updated all messaging to focus on patient records, medical documents, and healthcare
 - **Existing Auth**: Kept email/password and Google OAuth authentication working
 

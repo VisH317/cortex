@@ -200,7 +200,7 @@ function LandingPage() {
             >
               Welcome to{" "}
               <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
-                MedVault
+                Cortex
               </span>
             </motion.h1>
 
@@ -244,7 +244,7 @@ function LandingPage() {
           className="mb-16 text-center"
         >
           <h2 className="mb-4 text-4xl font-bold text-gray-900">
-            Why Choose MedVault?
+            Why Choose Cortex?
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-gray-600">
             Everything you need to manage medical records efficiently and securely
@@ -303,7 +303,7 @@ function LandingPage() {
               Ready to Get Started?
             </h2>
             <p className="mx-auto mb-8 max-w-2xl text-xl text-blue-50">
-              Join healthcare professionals who trust MedVault for their medical record management
+              Join healthcare professionals who trust Cortex for their medical record management
             </p>
             <Link href="/auth">
               <Button

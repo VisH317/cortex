@@ -46,7 +46,7 @@ Grays: #f9fafb → #111827 (light to dark)
      - Floating animated gradient orbs in background
      - Pulsing gradient logo
      - Staggered text animations
-     - Gradient text for "MedVault"
+     - Gradient text for "Cortex"
    - **Feature cards section** with hover animations
    - **CTA section** with gradient background and pattern overlay
    - All using trustworthy blues and warm oranges

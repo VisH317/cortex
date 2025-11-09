@@ -102,7 +102,7 @@ export default function AuthPage() {
           <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-orange-500 shadow-lg">
             <Activity className="h-7 w-7 text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">MedVault</span>
+          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">Cortex</span>
         </Link>
 
         {/* Auth Card */}

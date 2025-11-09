@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "bubbly-hope-477607-f7",
+  "private_key_id": "9d638b12c0f0a67dc8fb8eeb2768d9f037e55d4e",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCd1Dh9v1OcYT7a\na0UXS7TDRmTRMTOBBXu6d2EVFlR+cNTsE43ybS5AqSOtW/YWY1Sx8TPVggcQqNFi\nwdGov+MFDvQ8Nlk/xe/d2mIpKitH4bJwStkRHAkfDg7k0IF01pyKHKPeYWuNhPN0\n1GCiWaAVBjoOSpStC2i+GKgKV2HGd6ICQJvgAw3yYFM4mbuQw8KuLN6f1Zye2uSu\ntN40lR5Ql6Vp4Uj2NcgkVguI0kqef/4XNbQsUwqK2X8mlHsbX1hH+sUgc8/dsJOf\n4xcyfl2gYZ6s5tEe0aXfl1xLRI+HukvmplmY2zvquMvlQPXT9VjLfyY3S5geIEL5\n/DtgVXlXAgMBAAECggEAEos69fSzFLZ3pZR2ojWSxWIxz0MaJj3S20ZSgaFFh95R\no3PquNdWLg0RdDl6sQe2YvqQQ1+gh+G7SatfKxYcojKvGfICy35CCs2GvLJyh7gU\nzffQCErEfEHGbeEHt4bNuWEtvx+wJ4kS98ufl65dzjU/QKryTAtWoQXm8eFxdgQs\nz9H4LozV/YR0rrO1qjQbw0lGtxr7GK32+49OLON3Rx24VcZsDZ/yayaMU8/C2dT6\n6oqnPr9Ps3J8BTMNwkAe96gPedh0Lg6CS1Rrh+q/0nP3ZZr13Jeeo3+ZHRK/RoIP\njGUhu43iQtf6Q9K6X4IlOLGJ0MTJaRAuxCLYXYr4fQKBgQDN0WrfiBUqyF36ZTo9\nhA8dFX4DUwA1PJKG29mh+7CXnYxvoLgwhUtRMuCi2/4mhKkBoB6kltuaTG37PasL\nV+ul7o+OePSXcSSsHY6f9nj/3g+sueuZoGECfly/XWKZJVrGQj5MHLuzPNeaDsgc\nLJq0jV4s3AUKqjus2K5xQ8D96wKBgQDET3Y22VJ9Dy/cFNDdo/GgcmBzjHoDzoTG\nUhcosHUUdppCIZ0370GfifWUIHYCs8NyJl83p3eoAWVxg1qV1jIUERi/cr5NzQUs\nmBwsfHWGXi89wkC/FJ/AUQkquTE8sloXCLyrsOW7ES15XiH7niZcLoWxTsb4cYSt\nZEejkQvbRQKBgHUdcR75JHJPyYouB9HxT1hRXn8tv7SLXyV1/IT73ySm9b6fSa/y\naUUvGjwRyrDIVBMktcsaPKO0UfDgym+N+/1TnkSH90Ylj6SQvROxAHE4PtsegD3O\n0OTGWqhZzz0t0FV4ZFKTFwuK13RGbP/7MZ0DxE7qc8P50jMsqTayQyM5AoGBAMA3\n+k2MkCuqMjeyHi3X+KEdPXoG4/ZUQkgaW1jZJ1sJItR8K4B4gm4f3NnUyxisQkTE\nc9l/3jcgXt8+OfWbTV++udfEF7kAdf+LVZLtrvoJwQIc8d7n5+CcuHgf66k+Dd6e\nDHek990q3bcISAgje/YpC3lo5ISiSsKo/UiYnt5tAoGAfIuu3qre0mhQO6ljLYVY\n9+2p2m7Zjbi620k0/Z30piWO6wfg1n11xaxSgMmXvF0Nk2/A4CTOd69+iXs2vPte\nj1lOaXVA6TGg0iVt+rx/fSm0923cRSIUofQ2EJCNPHuVsNVHXueT5v0ctcgdsVuF\nnLkVTw99cOOUPNw7hlV0y/s=\n-----END PRIVATE KEY-----\n",
+  "client_email": "synapsevault-embeddings@bubbly-hope-477607-f7.iam.gserviceaccount.com",
+  "client_id": "109241994936319938226",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/synapsevault-embeddings%40bubbly-hope-477607-f7.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
