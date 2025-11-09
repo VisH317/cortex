@@ -80,7 +80,7 @@ export default function VaultContent({
     
     // Build breadcrumb folder ID map
     buildBreadcrumbMap()
-  }, [initialFolders, initialFiles, initialShortcuts, slugPath])
+  }, [initialFolders, initialFiles, initialShortcuts, slugPath, patientId])
 
   const buildBreadcrumbMap = async () => {
     if (slugPath.length === 0) return
@@ -126,7 +126,13 @@ export default function VaultContent({
   }
 
   const fetchAllFolders = async () => {
-    let query = supabase.from("folders").select("*")
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    let query = supabase
+      .from("folders")
+      .select("*")
+      .eq("user_id", user.id)
     
     if (patientId) {
       query = query.eq("patient_id", patientId)
@@ -201,6 +207,9 @@ export default function VaultContent({
     if (foldersData) setFolders(foldersData)
     if (filesData) setFiles(filesData)
     if (shortcutsData) setShortcuts(shortcutsData)
+    
+    // Also refresh the folder tree sidebar
+    await fetchAllFolders()
   }
 
 
@@ -249,15 +258,15 @@ export default function VaultContent({
   const getFileIcon = (type: string) => {
     switch (type) {
       case "code":
-        return <Code className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+        return <Code className="h-6 w-6 text-blue-600" />
       case "image":
-        return <ImageIcon className="h-6 w-6 text-green-600 dark:text-green-400" />
+        return <ImageIcon className="h-6 w-6 text-green-600" />
       case "audio":
-        return <Music className="h-6 w-6 text-purple-600 dark:text-purple-400" />
+        return <Music className="h-6 w-6 text-purple-600" />
       case "video":
-        return <Video className="h-6 w-6 text-red-600 dark:text-red-400" />
+        return <Video className="h-6 w-6 text-red-600" />
       default:
-        return <FileText className="h-6 w-6 text-zinc-600 dark:text-zinc-400" />
+        return <FileText className="h-6 w-6 text-gray-600" />
     }
   }
 
@@ -299,33 +308,36 @@ export default function VaultContent({
   const isEmpty = allItems.length === 0
 
   return (
-    <div className="flex h-full bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-full bg-gradient-to-br from-blue-50/30 via-white to-orange-50/30">
       {/* Sidebar */}
-      <div className="w-64 border-r border-black/10 bg-white dark:border-white/10 dark:bg-black">
-        <div className="flex h-16 items-center gap-2 border-b border-black/10 px-4 dark:border-white/10">
-          <FolderTreeIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-          <span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Medical Records</span>
+      <div className="w-64 border-r-2 border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="flex h-16 items-center gap-3 border-b-2 border-gray-200 px-5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-blue-600">
+            <FolderTreeIcon className="h-4 w-4 text-white" />
+          </div>
+          <span className="text-sm font-bold text-gray-800">Medical Records</span>
         </div>
         <FolderTree
           folders={allFolders}
           currentPath={currentPath}
           onCreateFolder={() => setShowCreateFolder(true)}
+          patientId={patientId}
         />
       </div>
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="flex h-16 items-center justify-between border-b border-black/10 bg-white px-6 dark:border-white/10 dark:bg-black">
+        <header className="flex h-16 items-center justify-between border-b-2 border-gray-200 bg-white/80 px-6 backdrop-blur-sm">
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-sm">
             <button
-              onClick={() => router.push("/vault")}
+              onClick={() => router.push(patientId ? `/patient/${patientId}` : "/")}
               onDragOver={(e) => handleDragOver(e, "breadcrumb", "root")}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, null)}
-              className={`rounded px-2 py-1 text-zinc-600 transition-colors hover:bg-black/5 hover:text-black dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white ${
-                dropTarget === "root" ? "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400" : ""
+              className={`rounded px-2 py-1 text-gray-600 transition-colors hover:bg-white/5 hover:text-black ${
+                dropTarget === "root" ? "bg-blue-50 text-blue-600" : ""
               }`}
             >
               Home
@@ -335,20 +347,23 @@ export default function VaultContent({
               const breadcrumbPath = slugPath.slice(0, idx + 1)
               const folderId = breadcrumbFolders.get(idx)
               const displayName = idx === slugPath.length - 1 && currentFolder ? currentFolder.name : slug
+              const targetPath = patientId 
+                ? `/patient/${patientId}/${buildSlugPath(breadcrumbPath)}`
+                : `/${buildSlugPath(breadcrumbPath)}`
               
               return (
                 <div key={idx} className="flex items-center gap-2">
-                  <ChevronRight className="h-4 w-4 text-zinc-400" />
+                  <ChevronRight className="h-4 w-4 text-gray-400" />
                   <button
-                    onClick={() => router.push(`/vault/${buildSlugPath(breadcrumbPath)}`)}
+                    onClick={() => router.push(targetPath)}
                     onDragOver={(e) => handleDragOver(e, "breadcrumb", folderId)}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, folderId || null)}
                     className={`rounded px-2 py-1 transition-colors ${
                       idx === slugPath.length - 1
                         ? "font-medium"
-                        : "text-zinc-600 hover:bg-black/5 hover:text-black dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-white"
-                    } ${dropTarget === folderId ? "bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400" : ""}`}
+                        : "text-gray-600 hover:bg-white/5 hover:text-black"
+                    } ${dropTarget === folderId ? "bg-blue-50 text-blue-600" : ""}`}
                   >
                     {displayName}
                   </button>
@@ -359,7 +374,7 @@ export default function VaultContent({
 
           <div className="flex items-center gap-3">
             <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 type="text"
                 placeholder="Search..."
@@ -380,7 +395,7 @@ export default function VaultContent({
         </header>
 
         {/* Action Bar */}
-        <div className="flex items-center gap-3 border-b border-black/10 bg-white px-6 py-4 dark:border-white/10 dark:bg-black">
+        <div className="flex items-center gap-3 border-b-2 border-gray-200 bg-white/80 px-6 py-5 backdrop-blur-sm">
           <Button className="gap-2" onClick={() => setShowFileUpload(true)}>
             <Upload className="h-4 w-4" />
             Upload Files
@@ -401,14 +416,14 @@ export default function VaultContent({
             <div className="flex h-full items-center justify-center">
               <div className="max-w-md text-center">
                 <div className="mb-6 flex justify-center">
-                  <div className="rounded-full bg-zinc-100 p-6 dark:bg-zinc-900">
-                    <FolderIcon className="h-12 w-12 text-zinc-400" />
+                  <div className="rounded-full bg-gray-100 p-6">
+                    <FolderIcon className="h-12 w-12 text-gray-400" />
                   </div>
                 </div>
                 <h2 className="mb-2 text-2xl font-bold">
                   {currentFolder ? `${currentFolder.name} is empty` : "Your vault is empty"}
                 </h2>
-                <p className="mb-6 text-zinc-600 dark:text-zinc-400">
+                <p className="mb-6 text-gray-600">
                   Start by uploading files, adding website shortcuts, or creating folders
                 </p>
                 <div className="flex justify-center gap-3">
@@ -430,14 +445,18 @@ export default function VaultContent({
                   return (
                     <div
                       key={item.id}
-                      onDoubleClick={() => router.push(`/vault/${currentPath ? currentPath + '/' : ''}${item.slug}`)}
+                      onDoubleClick={() => {
+                        const newPath = currentPath ? `${currentPath}/${item.slug}` : item.slug
+                        const targetUrl = patientId ? `/patient/${patientId}/${newPath}` : `/${newPath}`
+                        router.push(targetUrl)
+                      }}
                       onDragOver={(e) => handleDragOver(e, "folder", item.id)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, item.id)}
-                      className={`group relative cursor-pointer rounded-lg border bg-white p-4 text-left transition-all hover:border-black/20 hover:shadow-md dark:bg-zinc-900 dark:hover:border-white/20 ${
+                      className={`group relative cursor-pointer rounded-3xl border-2 border-gray-200 bg-white p-5 text-left transition-all hover:border-blue-300 hover:shadow-xl ${
                         dropTarget === item.id
-                          ? "border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
-                          : "border-black/10 dark:border-white/10"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200"
                       }`}
                     >
                       <div className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100">
@@ -450,13 +469,13 @@ export default function VaultContent({
                           }}
                         />
                       </div>
-                      <div className="mb-3 flex h-24 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                        <FolderIcon className="h-12 w-12 text-blue-600 dark:text-blue-400" />
+                      <div className="mb-4 flex h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50">
+                        <FolderIcon className="h-14 w-14 text-blue-600" strokeWidth={1.5} />
                       </div>
                       <h3 className="truncate text-sm font-medium" title={item.name}>
                         {item.name}
                       </h3>
-                      <p className="mt-1 text-xs text-zinc-500">Double-click to open</p>
+                      <p className="mt-1 text-xs text-gray-500">Double-click to open</p>
                     </div>
                   )
                 }
@@ -469,7 +488,7 @@ export default function VaultContent({
                       onDragStart={(e) => handleDragStart(e, "file", item.id)}
                       onDragEnd={handleDragEnd}
                       onClick={() => router.push(`/vault/file/${item.id}`)}
-                      className={`group relative cursor-pointer rounded-lg border border-black/10 bg-white p-4 text-left transition-all hover:border-black/20 hover:shadow-md dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20 ${
+                      className={`group relative cursor-pointer rounded-3xl border-2 border-gray-200 bg-white p-5 text-left transition-all hover:border-blue-300 hover:shadow-xl ${
                         draggedItem?.id === item.id ? "opacity-50" : ""
                       }`}
                     >
@@ -486,16 +505,16 @@ export default function VaultContent({
                           onAnalyzeImage={() => handleAnalyzeImage(item)}
                         />
                       </div>
-                      <div className="mb-3 flex h-24 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800">
+                      <div className="mb-4 flex h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-gray-100 to-gray-50">
                         {getFileIcon(item.type)}
                       </div>
                       <h3 className="truncate text-sm font-medium" title={item.name}>
                         {item.name}
                       </h3>
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                      <p className="text-xs text-gray-600">
                         {formatFileSize(item.size_bytes)}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-500">{formatDate(item.created_at)}</p>
+                      <p className="mt-1 text-xs text-gray-500">{formatDate(item.created_at)}</p>
                     </div>
                   )
                 }
@@ -507,7 +526,7 @@ export default function VaultContent({
                     draggable
                     onDragStart={(e) => handleDragStart(e, "shortcut", item.id)}
                     onDragEnd={handleDragEnd}
-                    className={`group relative cursor-pointer rounded-lg border border-black/10 bg-white p-4 transition-all hover:border-black/20 hover:shadow-md dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20 ${
+                    className={`group relative cursor-pointer rounded-3xl border-2 border-gray-200 bg-white p-5 transition-all hover:border-orange-300 hover:shadow-xl ${
                       draggedItem?.id === item.id ? "opacity-50" : ""
                     }`}
                   >
@@ -526,16 +545,16 @@ export default function VaultContent({
                       onClick={() => window.open(item.url, "_blank")}
                       className="cursor-pointer"
                     >
-                      <div className="mb-3 flex h-24 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/20">
-                        <LinkIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+                      <div className="mb-4 flex h-28 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-100 to-orange-50">
+                        <LinkIcon className="h-10 w-10 text-orange-600" strokeWidth={2} />
                       </div>
                       <h3 className="truncate text-sm font-medium" title={item.title}>
                         {item.title}
                       </h3>
-                      <p className="truncate text-xs text-zinc-600 dark:text-zinc-400">
+                      <p className="truncate text-xs text-gray-600">
                         {new URL(item.url).hostname}
                       </p>
-                      <p className="mt-1 text-xs text-zinc-500">{formatDate(item.created_at)}</p>
+                      <p className="mt-1 text-xs text-gray-500">{formatDate(item.created_at)}</p>
                     </div>
                   </div>
                 )
@@ -548,22 +567,26 @@ export default function VaultContent({
                   return (
                     <div
                       key={item.id}
-                      onDoubleClick={() => router.push(`/vault/${currentPath ? currentPath + '/' : ''}${item.slug}`)}
+                      onDoubleClick={() => {
+                        const newPath = currentPath ? `${currentPath}/${item.slug}` : item.slug
+                        const targetUrl = patientId ? `/patient/${patientId}/${newPath}` : `/${newPath}`
+                        router.push(targetUrl)
+                      }}
                       onDragOver={(e) => handleDragOver(e, "folder", item.id)}
                       onDragLeave={handleDragLeave}
                       onDrop={(e) => handleDrop(e, item.id)}
-                      className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-lg border bg-white p-4 text-left transition-all hover:border-black/20 dark:bg-zinc-900 dark:hover:border-white/20 ${
+                      className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-lg border bg-white p-4 text-left transition-all hover:border-gray-300 ${
                         dropTarget === item.id
-                          ? "border-blue-500 bg-blue-50 dark:border-blue-500 dark:bg-blue-950/30"
-                          : "border-black/10 dark:border-white/10"
+                          ? "border-blue-500 bg-blue-50"
+                          : "border-gray-200"
                       }`}
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950/20">
-                        <FolderIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50">
+                        <FolderIcon className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">Double-click to open</p>
+                        <p className="text-sm text-gray-600">Double-click to open</p>
                       </div>
                       <div className="opacity-0 transition-opacity group-hover:opacity-100">
                         <FolderContextMenu
@@ -587,20 +610,20 @@ export default function VaultContent({
                       onDragStart={(e) => handleDragStart(e, "file", item.id)}
                       onDragEnd={handleDragEnd}
                       onClick={() => router.push(`/vault/file/${item.id}`)}
-                      className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-black/10 bg-white p-4 text-left transition-all hover:border-black/20 dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20 ${
+                      className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 text-left transition-all hover:border-gray-300 ${
                         draggedItem?.id === item.id ? "opacity-50" : ""
                       }`}
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gray-50">
                         {getFileIcon(item.type)}
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{item.name}</h3>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                        <p className="text-sm text-gray-600">
                           {item.type} • {formatFileSize(item.size_bytes)}
                         </p>
                       </div>
-                      <div className="text-right text-sm text-zinc-500">{formatDate(item.created_at)}</div>
+                      <div className="text-right text-sm text-gray-500">{formatDate(item.created_at)}</div>
                       <div className="opacity-0 transition-opacity group-hover:opacity-100">
                         <FileContextMenu
                           fileId={item.id}
@@ -624,7 +647,7 @@ export default function VaultContent({
                     draggable
                     onDragStart={(e) => handleDragStart(e, "shortcut", item.id)}
                     onDragEnd={handleDragEnd}
-                    className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-black/10 bg-white p-4 transition-all hover:border-black/20 dark:border-white/10 dark:bg-zinc-900 dark:hover:border-white/20 ${
+                    className={`group relative flex w-full cursor-pointer items-center gap-4 rounded-lg border border-gray-200 bg-white p-4 transition-all hover:border-gray-300 ${
                       draggedItem?.id === item.id ? "opacity-50" : ""
                     }`}
                   >
@@ -632,14 +655,14 @@ export default function VaultContent({
                       onClick={() => window.open(item.url, "_blank")}
                       className="flex flex-1 cursor-pointer items-center gap-4"
                     >
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50 dark:bg-purple-950/20">
-                        <LinkIcon className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-purple-50">
+                        <LinkIcon className="h-5 w-5 text-purple-600" />
                       </div>
                       <div className="flex-1">
                         <h3 className="font-medium">{item.title}</h3>
-                        <p className="text-sm text-zinc-600 dark:text-zinc-400">{item.url}</p>
+                        <p className="text-sm text-gray-600">{item.url}</p>
                       </div>
-                      <div className="text-right text-sm text-zinc-500">{formatDate(item.created_at)}</div>
+                      <div className="text-right text-sm text-gray-500">{formatDate(item.created_at)}</div>
                     </div>
                     <div className="opacity-0 transition-opacity group-hover:opacity-100">
                       <WebsiteShortcutContextMenu

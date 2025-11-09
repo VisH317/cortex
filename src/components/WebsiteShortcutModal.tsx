@@ -75,17 +75,13 @@ export function WebsiteShortcutModal({ folderId, onClose, onSuccess }: WebsiteSh
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error("Not authenticated")
 
-      // Get favicon URL (best effort)
-      const urlObj = new URL(url)
-      const faviconUrl = `https://www.google.com/s2/favicons?domain=${urlObj.hostname}&sz=64`
-
+      // Insert website shortcut (only essential content fields)
       const { data: insertedWebsite, error: dbError } = await supabase.from("website_shortcuts").insert({
         user_id: user.id,
         folder_id: folderId,
         url,
         title: title.trim(),
         description: description.trim() || null,
-        favicon_url: faviconUrl,
         embedding_status: "pending",
       }).select().single()
 
@@ -119,9 +115,9 @@ export function WebsiteShortcutModal({ folderId, onClose, onSuccess }: WebsiteSh
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
-        <div className="flex items-center justify-between border-b border-black/10 p-6 dark:border-white/10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 p-4">
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 p-6">
           <div className="flex items-center gap-2">
             <LinkIcon className="h-5 w-5" />
             <h2 className="text-lg font-semibold">Add Website</h2>
@@ -129,7 +125,7 @@ export function WebsiteShortcutModal({ folderId, onClose, onSuccess }: WebsiteSh
           <button
             onClick={onClose}
             disabled={loading}
-            className="rounded-lg p-1 hover:bg-black/10 disabled:opacity-50 dark:hover:bg-white/10"
+            className="rounded-lg p-1 hover:bg-white/10 disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -151,7 +147,7 @@ export function WebsiteShortcutModal({ folderId, onClose, onSuccess }: WebsiteSh
 
           <div>
             <label className="mb-2 block text-sm font-medium">
-              Title * {scraping && <span className="text-xs text-zinc-500">(loading...)</span>}
+              Title * {scraping && <span className="text-xs text-gray-500">(loading...)</span>}
             </label>
             <Input
               type="text"
@@ -171,12 +167,12 @@ export function WebsiteShortcutModal({ folderId, onClose, onSuccess }: WebsiteSh
               onChange={(e) => setDescription(e.target.value)}
               disabled={loading || scraping}
               rows={3}
-              className="flex w-full rounded-lg border border-black/20 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 dark:border-white/20 dark:bg-black dark:ring-offset-black dark:placeholder:text-white/50 dark:focus-visible:ring-white"
+              className="flex w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm ring-offset-white placeholder:text-black/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
               {error}
             </div>
           )}

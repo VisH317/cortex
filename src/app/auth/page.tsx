@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
-import { Brain } from "lucide-react"
+import { Activity } from "lucide-react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,7 +34,7 @@ export default function AuthPage() {
         if (error) throw error
 
         if (data.user) {
-          router.push("/vault/home")
+          router.push("/")
           router.refresh()
         }
       } else {
@@ -63,7 +63,7 @@ export default function AuthPage() {
 
           if (profileError) console.error("Profile creation error:", profileError)
 
-          router.push("/vault/home")
+          router.push("/")
           router.refresh()
         }
       }
@@ -94,30 +94,32 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-zinc-50 px-4 dark:from-black dark:to-zinc-950">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-orange-50 px-4">
       <div className="w-full max-w-md">
         {/* Logo */}
-        <Link href="/" className="mb-8 flex items-center justify-center gap-2">
-          <Brain className="h-8 w-8" />
-          <span className="text-2xl font-bold">SynapseVault</span>
+        <Link href="/" className="mb-10 flex items-center justify-center gap-3 transition-transform hover:scale-105">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-orange-500 shadow-lg">
+            <Activity className="h-7 w-7 text-white" strokeWidth={2.5} />
+          </div>
+          <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">MedVault</span>
         </Link>
 
         {/* Auth Card */}
-        <div className="rounded-2xl border border-black/10 bg-white p-8 shadow-lg dark:border-white/10 dark:bg-zinc-900">
-          <div className="mb-6 text-center">
-            <h1 className="text-2xl font-bold">
+        <div className="rounded-3xl border-2 border-gray-200 bg-white p-8 shadow-xl">
+          <div className="mb-8 text-center">
+            <h1 className="text-3xl font-bold text-gray-900">
               {isLogin ? "Welcome back" : "Create an account"}
             </h1>
-            <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mt-2 text-base text-gray-600">
               {isLogin
-                ? "Sign in to access your vault"
-                : "Sign up to start organizing your research"}
+                ? "Sign in to access your medical records"
+                : "Sign up to start managing medical records"}
             </p>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
+            <div className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
               {error}
             </div>
           )}
@@ -150,22 +152,22 @@ export default function AuthPage() {
             Continue with Google
           </Button>
 
-          <div className="relative mb-4">
+          <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-black/10 dark:border-white/10"></div>
+              <div className="w-full border-t-2 border-gray-200"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+              <span className="bg-white px-4 font-medium text-gray-500">
                 Or continue with email
               </span>
             </div>
           </div>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleEmailAuth} className="space-y-4">
+          <form onSubmit={handleEmailAuth} className="space-y-5">
             {!isLogin && (
               <div>
-                <label className="mb-2 block text-sm font-medium">Full Name</label>
+                <label className="mb-2 block text-sm font-medium text-gray-700">Full Name</label>
                 <Input
                   type="text"
                   placeholder="John Doe"
@@ -178,7 +180,7 @@ export default function AuthPage() {
             )}
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Email</label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Email</label>
               <Input
                 type="email"
                 placeholder="you@example.com"
@@ -190,7 +192,7 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label className="mb-2 block text-sm font-medium">Password</label>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Password</label>
               <Input
                 type="password"
                 placeholder="••••••••"
@@ -202,14 +204,14 @@ export default function AuthPage() {
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full shadow-lg" disabled={loading}>
               {loading ? "Loading..." : isLogin ? "Sign In" : "Sign Up"}
             </Button>
           </form>
 
           {/* Toggle Login/Signup */}
-          <div className="mt-6 text-center text-sm">
-            <span className="text-zinc-600 dark:text-zinc-400">
+          <div className="mt-8 text-center text-sm">
+            <span className="text-gray-600">
               {isLogin ? "Don't have an account?" : "Already have an account?"}
             </span>{" "}
             <button
@@ -217,7 +219,7 @@ export default function AuthPage() {
                 setIsLogin(!isLogin)
                 setError(null)
               }}
-              className="font-medium text-black hover:underline dark:text-white"
+              className="font-bold text-blue-600 hover:text-blue-700 hover:underline"
               disabled={loading}
             >
               {isLogin ? "Sign up" : "Sign in"}
@@ -226,10 +228,10 @@ export default function AuthPage() {
         </div>
 
         {/* Back to Home */}
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center">
           <Link
             href="/"
-            className="text-sm text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+            className="text-sm font-medium text-gray-600 transition-colors hover:text-blue-600"
           >
             ← Back to home
           </Link>

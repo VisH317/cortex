@@ -51,7 +51,7 @@ export function FolderContextMenu({ folderId, folderName, onDelete }: FolderCont
             className="fixed inset-0 z-10"
             onClick={() => setShowMenu(false)}
           />
-          <div className="absolute right-0 top-8 z-20 w-48 rounded-lg border border-black/10 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-900">
+          <div className="absolute right-0 top-8 z-20 w-48 rounded-lg border border-gray-200 bg-white shadow-lg">
             <button
               onClick={(e) => {
                 e.stopPropagation()
@@ -59,7 +59,7 @@ export function FolderContextMenu({ folderId, folderName, onDelete }: FolderCont
                 setShowMenu(false)
               }}
               disabled={deleting}
-              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-50 dark:text-red-400 dark:hover:bg-red-950/20"
+              className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 disabled:opacity-50"
             >
               <Trash2 className="h-4 w-4" />
               {deleting ? "Deleting..." : "Delete"}

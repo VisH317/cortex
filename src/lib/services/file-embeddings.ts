@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/server"
 import { generateEmbedding, generateEmbeddingsBatch } from "./embeddings"
 import { smartChunk, extractTextFromHTML } from "@/lib/utils/text-chunking"
 import { getLanguageFromExtension, isCodeFile } from "@/lib/utils/file-utils"
+import { advancedWebScraper, isPlaywrightAvailable } from "@/lib/utils/advanced-web-scraper"
 import PDFParser from "pdf2json"
 import { promises as fs } from "fs"
 import { v4 as uuidv4 } from "uuid"
@@ -162,6 +163,126 @@ export async function generateTextFileEmbeddings(
 }
 
 /**
+ * Detect if a website appears to be a JavaScript-heavy SPA
+ */
+function detectSPA(html: string, url: string): boolean {
+  // Check for common SPA frameworks
+  const spaIndicators = [
+    /<div id="root">/i,
+    /<div id="app">/i,
+    /__NEXT_DATA__/,
+    /react/i,
+    /vue\.js/i,
+    /angular/i,
+    /_app-/,
+    /webpack/i,
+  ]
+  
+  // Check if HTML is minimal (typical of SPA shells)
+  const bodyMatch = html.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+  const bodyContent = bodyMatch?.[1] || ""
+  const bodyTextLength = bodyContent.replace(/<[^>]+>/g, "").trim().length
+  
+  // If body has very little text content, it's likely an SPA
+  if (bodyTextLength < 200) {
+    return true
+  }
+  
+  // Check for SPA indicators
+  return spaIndicators.some(indicator => {
+    if (typeof indicator === 'string') {
+      return html.includes(indicator)
+    }
+    return indicator.test(html)
+  })
+}
+
+/**
+ * Fetch website content with smart fallback for JavaScript-rendered sites
+ * 
+ * This function will use the advanced scraper if available, which includes:
+ * - Puppeteer support for JavaScript rendering (if enabled)
+ * - Better content extraction
+ * - Metadata extraction
+ * - Automatic fallback strategies
+ */
+async function fetchWebsiteContent(url: string): Promise<{ html: string; metadata?: any }> {
+  console.log(`[Website Fetch] Fetching: ${url}`)
+  
+  // Check if advanced scraper should be used
+  const useAdvancedScraper = process.env.USE_ADVANCED_SCRAPER !== 'false' // Default to true
+  
+  if (useAdvancedScraper) {
+    try {
+      // Always force Playwright for website embeddings to ensure full content capture
+      const forcePlaywright = process.env.ENABLE_PLAYWRIGHT === 'true'
+      const scrapedContent = await advancedWebScraper(url, { 
+        retries: 2,
+        forcePlaywright: forcePlaywright
+      })
+      
+      if (scrapedContent.isPuppeteerUsed) {
+        console.log(`[Website Fetch] Successfully scraped with Playwright (JavaScript rendered)`)
+      } else {
+        console.log(`[Website Fetch] Successfully scraped with standard fetch`)
+      }
+      
+      return {
+        html: scrapedContent.html,
+        metadata: {
+          title: scrapedContent.title,
+          description: scrapedContent.description,
+          author: scrapedContent.author,
+          publishedDate: scrapedContent.publishedDate,
+          isPuppeteerUsed: scrapedContent.isPuppeteerUsed,
+        },
+      }
+    } catch (error: any) {
+      console.warn(`[Website Fetch] Advanced scraper failed: ${error.message}. Falling back to basic fetch.`)
+      // Fall through to basic fetch
+    }
+  }
+  
+  // Fallback: Basic fetch (fast, works for static sites)
+  try {
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate, br",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1",
+      },
+      redirect: 'follow',
+    })
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+    }
+
+    const html = await response.text()
+    
+    // Check if this is a JavaScript-heavy SPA that needs rendering
+    const isSPA = detectSPA(html, url)
+    
+    if (isSPA && isPlaywrightAvailable()) {
+      console.log(`[Website Fetch] SPA detected. Consider enabling ENABLE_PLAYWRIGHT for better results.`)
+    } else if (isSPA) {
+      console.log(`[Website Fetch] SPA detected, content may be incomplete. Install Playwright for JavaScript rendering:`)
+      console.log(`[Website Fetch]   npm install playwright`)
+      console.log(`[Website Fetch]   npx playwright install chromium`)
+      console.log(`[Website Fetch]   Set ENABLE_PLAYWRIGHT=true in .env`)
+    }
+    
+    return { html, metadata: undefined }
+  } catch (error: any) {
+    console.error(`[Website Fetch] Error fetching ${url}:`, error.message)
+    throw new Error(`Failed to fetch website: ${error.message}`)
+  }
+}
+
+/**
  * Generate embeddings for website shortcuts
  */
 export async function generateWebsiteEmbeddings(
@@ -189,22 +310,25 @@ export async function generateWebsiteEmbeddings(
       .eq("id", websiteId))
 
   try {
-    // Fetch website content
-    const response = await fetch(website.url, {
-      headers: {
-        "User-Agent": "SynapseVault/1.0 (Research Assistant)",
-      },
-    })
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch website: ${response.statusText}`)
-    }
-
-    const html = await response.text()
+    // Fetch website content with smart detection
+    const { html, metadata: scrapedMetadata } = await fetchWebsiteContent(website.url)
+    
+    // Extract text content using improved extraction
     const content = extractTextFromHTML(html)
 
     if (!content || content.length < 50) {
-      throw new Error("Insufficient content extracted from website")
+      throw new Error("Insufficient content extracted from website. The site may require JavaScript rendering or may be blocking scrapers.")
+    }
+
+    console.log(`[Website Embeddings] Extracted ${content.length} characters from ${website.url}`)
+    
+    // Update website description if we got additional info from scraping
+    if (scrapedMetadata && scrapedMetadata.description && !website.description) {
+      await supabase
+        .from("website_shortcuts")
+        .update({ description: scrapedMetadata.description } as any)
+        .eq("id", websiteId)
+      console.log(`[Website Embeddings] Updated description from scraped metadata`)
     }
 
     // Get folder path for metadata
@@ -216,6 +340,8 @@ export async function generateWebsiteEmbeddings(
     if (chunks.length === 0) {
       throw new Error("No content to embed")
     }
+
+    console.log(`[Website Embeddings] Created ${chunks.length} chunks`)
 
     // Generate embeddings for all chunks
     const embeddings = await generateEmbeddingsBatch(
@@ -236,7 +362,6 @@ export async function generateWebsiteEmbeddings(
         folder_path: folderPath,
         folder_id: website.folder_id,
         content_type: "website",
-        favicon: website.favicon,
         ...chunk.metadata,
       },
     }))
@@ -256,6 +381,8 @@ export async function generateWebsiteEmbeddings(
       .eq("id", websiteId))
 
     const totalTokens = embeddings.reduce((sum, e) => sum + e.tokens, 0)
+
+    console.log(`[Website Embeddings] Successfully embedded ${chunks.length} chunks (${totalTokens} tokens)`)
 
     return {
       chunkCount: chunks.length,

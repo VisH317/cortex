@@ -34,7 +34,7 @@ export default function PDFPreview({ fileUrl, fileName, isOpen, onClose }: PDFPr
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-white/80 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -43,15 +43,15 @@ export default function PDFPreview({ fileUrl, fileName, isOpen, onClose }: PDFPr
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className={`relative flex flex-col bg-white shadow-2xl dark:bg-zinc-900 ${
-                isFullScreen ? "h-full w-full" : "h-[90vh] w-full max-w-6xl rounded-2xl border border-black/10 dark:border-white/10"
+              className={`relative flex flex-col bg-white shadow-2xl ${
+                isFullScreen ? "h-full w-full" : "h-[90vh] w-full max-w-6xl rounded-2xl border border-gray-200"
               }`}
             >
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-black/10 p-4 dark:border-white/10">
+              <div className="flex items-center justify-between border-b border-gray-200 p-4">
                 <div className="flex-1">
                   <h3 className="truncate text-lg font-semibold">{fileName}</h3>
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">PDF Document</p>
+                  <p className="text-sm text-gray-600">PDF Document</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -83,7 +83,7 @@ export default function PDFPreview({ fileUrl, fileName, isOpen, onClose }: PDFPr
                   </Button>
                   <button
                     onClick={onClose}
-                    className="rounded-lg p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                    className="rounded-lg p-2 hover:bg-gray-100"
                   >
                     <X className="h-5 w-5" />
                   </button>

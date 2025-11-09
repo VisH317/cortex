@@ -7,8 +7,8 @@ import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 
 interface ChatAgentProps {
-  patientId: string
-  patientName: string
+  patientId: string | null
+  patientName: string | null
   isOpen: boolean
   onClose: () => void
 }
@@ -124,25 +124,25 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
           animate={{ width: "28rem", opacity: 1 }}
           exit={{ width: 0, opacity: 0 }}
           transition={{ type: "spring", damping: 30, stiffness: 300 }}
-          className="flex h-full flex-col border-l border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-zinc-900 overflow-hidden"
+          className="flex h-full flex-col border-l border-gray-200 bg-white shadow-2xl overflow-hidden"
         >
           {/* Header */}
-          <div className="flex flex-col border-b border-black/10 dark:border-white/10">
+          <div className="flex flex-col border-b border-gray-200">
             <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white border border-black/20">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white border border-gray-300">
                   <Brain className="h-6 w-6 text-black" />
                 </div>
                 <div>
                   <h2 className="font-semibold">Medical AI Assistant</h2>
-                  <p className="text-xs text-zinc-600 dark:text-zinc-400">
-                    Patient: {patientName}
+                  <p className="text-xs text-gray-600">
+                    {patientName ? `Patient: ${patientName}` : "Context: Medical Vault"}
                   </p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="rounded-lg p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                className="rounded-lg p-2 hover:bg-gray-100"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -154,8 +154,8 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                 onClick={() => setResearchModeEnabled(!researchModeEnabled)}
                 className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
                   researchModeEnabled
-                    ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                    ? "bg-blue-100 text-blue-700"
+                    : "bg-gray-100 text-gray-600 hover:bg-zinc-200"
                 }`}
               >
                 <GraduationCap className="h-4 w-4" />
@@ -167,7 +167,7 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                 />
               </button>
               {researchModeEnabled && (
-                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-gray-500">
                   Can search scholarly articles
                 </p>
               )}
@@ -178,20 +178,20 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {messages.length === 0 ? (
               <div className="flex h-full flex-col items-center justify-center text-center">
-                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white border-2 border-black/20">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white border-2 border-gray-300">
                   <Brain className="h-8 w-8 text-black" />
                 </div>
                 <h3 className="mb-2 text-lg font-semibold">Start a Conversation</h3>
-                <p className="max-w-xs text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="max-w-xs text-sm text-gray-600">
                   Ask me anything about {patientName}'s medical records, or search for medical research.
                 </p>
                 <div className="mt-6 space-y-2 text-sm">
-                  <p className="text-zinc-500">Try asking:</p>
+                  <p className="text-gray-500">Try asking:</p>
                   <div className="space-y-1">
-                    <div className="rounded-lg bg-zinc-100 p-2 text-left dark:bg-zinc-800">
+                    <div className="rounded-lg bg-gray-100 p-2 text-left">
                       "What are the recent test results?"
                     </div>
-                    <div className="rounded-lg bg-zinc-100 p-2 text-left dark:bg-zinc-800">
+                    <div className="rounded-lg bg-gray-100 p-2 text-left">
                       "Search for treatments for hypertension"
                     </div>
                   </div>
@@ -206,7 +206,7 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                   }`}
                 >
                   {message.role === "assistant" && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-black/20">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-gray-300">
                       <Brain className="h-5 w-5 text-black" />
                     </div>
                   )}
@@ -214,19 +214,19 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                     className={`max-w-[80%] space-y-2 ${
                       message.role === "user"
                         ? "rounded-2xl rounded-tr-sm bg-blue-600 p-3 text-white"
-                        : "rounded-2xl rounded-tl-sm bg-zinc-100 p-3 dark:bg-zinc-800"
+                        : "rounded-2xl rounded-tl-sm bg-gray-100 p-3"
                     }`}
                   >
                     <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     {message.citations && message.citations.length > 0 && (
-                      <div className="mt-2 space-y-1 border-t border-black/10 pt-2 dark:border-white/10">
-                        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      <div className="mt-2 space-y-1 border-t border-gray-200 pt-2">
+                        <p className="text-xs font-medium text-gray-500">
                           Sources:
                         </p>
                         {message.citations.slice(0, 3).map((citation, idx) => (
                           <div
                             key={idx}
-                            className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400"
+                            className="flex items-start gap-2 text-xs text-gray-600"
                           >
                             <FileText className="h-3 w-3 shrink-0 mt-0.5" />
                             <span className="line-clamp-1">{citation.file_name}</span>
@@ -236,8 +236,8 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                     )}
                   </div>
                   {message.role === "user" && (
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700">
-                      <User className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-200">
+                      <User className="h-5 w-5 text-gray-600" />
                     </div>
                   )}
                 </div>
@@ -245,12 +245,12 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
             )}
             {isLoading && (
               <div className="flex gap-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-black/20">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-gray-300">
                   <Brain className="h-5 w-5 text-black" />
                 </div>
-                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-zinc-100 p-3 dark:bg-zinc-800">
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-gray-100 p-3">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  <span className="text-sm text-zinc-600 dark:text-zinc-400">Thinking...</span>
+                  <span className="text-sm text-gray-600">Thinking...</span>
                 </div>
               </div>
             )}
@@ -258,7 +258,7 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
           </div>
 
           {/* Input */}
-          <div className="border-t border-black/10 p-4 dark:border-white/10">
+          <div className="border-t border-gray-200 p-4">
             <div className="flex gap-2">
               <Input
                 ref={inputRef}
@@ -278,7 +278,7 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                 <Send className="h-4 w-4" />
               </Button>
             </div>
-            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-2 text-xs text-gray-500">
               AI may make mistakes. Verify important information.
             </p>
           </div>

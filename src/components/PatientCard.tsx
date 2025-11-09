@@ -29,21 +29,22 @@ export default function PatientCard({ patient, onUpdate }: PatientCardProps) {
     <>
       <Link href={`/patient/${patient.id}`}>
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          whileHover={{ scale: 1.02 }}
-          className="group relative overflow-hidden rounded-xl border border-black/10 bg-white p-6 shadow-sm transition-shadow hover:shadow-md dark:border-white/10 dark:bg-zinc-900"
+          whileHover={{ y: -4, transition: { duration: 0.2 } }}
+          className="group relative h-full overflow-hidden rounded-3xl border-2 border-gray-200 bg-white p-6 shadow-md transition-all hover:border-blue-300 hover:shadow-xl"
         >
+          {/* Gradient overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-orange-500/5 opacity-0 transition-opacity group-hover:opacity-100" />
+          
           {/* Header */}
-          <div className="mb-4 flex items-start justify-between">
+          <div className="relative mb-4 flex items-start justify-between">
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
-                <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+                <User className="h-7 w-7 text-white" strokeWidth={2} />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">{patient.name}</h3>
+                <h3 className="text-lg font-bold text-gray-900">{patient.name}</h3>
                 {patient.age && (
-                  <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                  <p className="text-sm text-gray-600">
                     {patient.age} years old
                   </p>
                 )}
@@ -55,15 +56,15 @@ export default function PatientCard({ patient, onUpdate }: PatientCardProps) {
                   e.preventDefault()
                   setShowMenu(!showMenu)
                 }}
-                className="rounded-lg p-1 opacity-0 transition-opacity hover:bg-zinc-100 group-hover:opacity-100 dark:hover:bg-zinc-800"
+                className="rounded-xl p-2 opacity-0 transition-all hover:bg-blue-50 group-hover:opacity-100"
               >
-                <MoreVertical className="h-5 w-5" />
+                <MoreVertical className="h-5 w-5 text-gray-600" />
               </button>
               
               {/* Dropdown Menu */}
               {showMenu && (
                 <div 
-                  className="absolute right-0 top-full z-10 mt-1 w-48 rounded-lg border border-black/10 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-800"
+                  className="absolute right-0 top-full z-10 mt-2 w-48 overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-xl"
                   onClick={(e) => e.preventDefault()}
                 >
                   <button
@@ -72,7 +73,7 @@ export default function PatientCard({ patient, onUpdate }: PatientCardProps) {
                       setShowMenu(false)
                       setShowEditModal(true)
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-gray-700 hover:bg-blue-50"
                   >
                     <Edit2 className="h-4 w-4" />
                     Edit Patient
@@ -83,7 +84,7 @@ export default function PatientCard({ patient, onUpdate }: PatientCardProps) {
                       setShowMenu(false)
                       setShowDeleteModal(true)
                     }}
-                    className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-red-600 hover:bg-red-50"
                   >
                     <Trash2 className="h-4 w-4" />
                     Delete Patient
@@ -94,22 +95,28 @@ export default function PatientCard({ patient, onUpdate }: PatientCardProps) {
           </div>
 
         {/* Info Grid */}
-        <div className="space-y-2">
+        <div className="relative space-y-3">
           {patient.phone && (
-            <div className="flex items-center gap-2 text-sm">
-              <Phone className="h-4 w-4 text-zinc-400" />
-              <span className="text-zinc-600 dark:text-zinc-400">{patient.phone}</span>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50">
+                <Phone className="h-4 w-4 text-blue-600" />
+              </div>
+              <span className="text-gray-700 font-medium">{patient.phone}</span>
             </div>
           )}
           {patient.blood_type && (
-            <div className="flex items-center gap-2 text-sm">
-              <Droplet className="h-4 w-4 text-red-500" />
-              <span className="text-zinc-600 dark:text-zinc-400">Blood Type: {patient.blood_type}</span>
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-red-50">
+                <Droplet className="h-4 w-4 text-red-500" />
+              </div>
+              <span className="text-gray-700 font-medium">Blood Type: {patient.blood_type}</span>
             </div>
           )}
-          <div className="flex items-center gap-2 text-sm">
-            <Calendar className="h-4 w-4 text-zinc-400" />
-            <span className="text-zinc-600 dark:text-zinc-400">
+          <div className="flex items-center gap-3 text-sm">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-orange-50">
+              <Calendar className="h-4 w-4 text-orange-500" />
+            </div>
+            <span className="text-gray-600">
               Added {formatDate(patient.created_at)}
             </span>
           </div>
@@ -117,15 +124,15 @@ export default function PatientCard({ patient, onUpdate }: PatientCardProps) {
 
         {/* Gender Badge */}
         {patient.gender && (
-          <div className="mt-4">
-            <span className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+          <div className="relative mt-5">
+            <span className="inline-flex items-center rounded-2xl bg-gradient-to-r from-blue-50 to-orange-50 px-3 py-1.5 text-xs font-semibold text-gray-700 border border-gray-200">
               {patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1).replace(/_/g, " ")}
             </span>
           </div>
         )}
 
           {/* Hover Indicator */}
-          <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-purple-500 opacity-0 transition-opacity group-hover:opacity-100" />
+          <div className="absolute bottom-0 left-0 right-0 h-1.5 rounded-b-3xl bg-gradient-to-r from-blue-500 to-orange-500 opacity-0 transition-opacity group-hover:opacity-100" />
         </motion.div>
       </Link>
 

@@ -123,15 +123,23 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
   }
 
   const navigateToParentFolder = async () => {
+    // Determine if this is a patient file or vault file
+    const isPatientFile = !!file.patient_id
+    
     if (!file.folder_id) {
-      // File is in root, go to /vault
-      router.push("/vault")
+      // File is in root - go to patient page or home
+      if (isPatientFile) {
+        router.push(`/patient/${file.patient_id}`)
+      } else {
+        router.push("/")
+      }
       router.refresh()
       return
     }
 
     // Get folder path to navigate to the correct location
     try {
+      type FolderData = { id: string; slug: string; parent_id: string | null }
       const { data: folder } = await supabase
         .from("folders")
         .select("id, slug, parent_id")
@@ -139,35 +147,53 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
         .single()
 
       if (!folder) {
-        router.push("/vault")
+        if (isPatientFile) {
+          router.push(`/patient/${file.patient_id}`)
+        } else {
+          router.push("/")
+        }
         router.refresh()
         return
       }
 
       // Build the full path by traversing up the folder hierarchy
       const pathSegments: string[] = []
-      let currentFolder = folder
+      let currentFolder: FolderData | null = folder as FolderData
+      let parentId = currentFolder?.parent_id
 
-      while (currentFolder) {
+      while (currentFolder && parentId) {
         pathSegments.unshift(currentFolder.slug)
         
-        if (!currentFolder.parent_id) break
-
         const { data: parentFolder } = await supabase
           .from("folders")
           .select("id, slug, parent_id")
-          .eq("id", currentFolder.parent_id)
+          .eq("id", parentId)
           .single()
 
-        currentFolder = parentFolder
+        if (!parentFolder) break
+        currentFolder = parentFolder as FolderData
+        parentId = currentFolder?.parent_id || null
+      }
+      
+      // Add the last folder's slug
+      if (currentFolder) {
+        pathSegments.unshift(currentFolder.slug)
       }
 
       const folderPath = pathSegments.join("/")
-      router.push(`/vault/${folderPath}`)
+      if (isPatientFile) {
+        router.push(`/patient/${file.patient_id}/${folderPath}`)
+      } else {
+        router.push(`/${folderPath}`)
+      }
       router.refresh()
     } catch (err) {
-      // If anything goes wrong, just go to root
-      router.push("/vault")
+      // If anything goes wrong, go to appropriate root
+      if (isPatientFile) {
+        router.push(`/patient/${file.patient_id}`)
+      } else {
+        router.push("/")
+      }
       router.refresh()
     }
   }
@@ -179,8 +205,8 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
       return (
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
-            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-zinc-400" />
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading file...</p>
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-gray-400" />
+            <p className="text-sm text-gray-600">Loading file...</p>
           </div>
         </div>
       )
@@ -190,7 +216,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
       return (
         <div className="flex h-full items-center justify-center">
           <div className="text-center">
-            <p className="text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-red-600">{error}</p>
           </div>
         </div>
       )
@@ -200,13 +226,13 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
     if (isImage && signedUrl) {
       return (
         <div className="mx-auto max-w-5xl">
-          <div className="overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
-            <div className="flex items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+              <span className="text-xs font-medium text-gray-600">
                 Image • {file.mime_type}
               </span>
             </div>
-            <div className="flex items-center justify-center bg-zinc-50 p-8 dark:bg-zinc-900">
+            <div className="flex items-center justify-center bg-gray-50 p-8">
               <img
                 src={signedUrl}
                 alt={file.name}
@@ -222,14 +248,14 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
     if (isAudio && signedUrl) {
       return (
         <div className="mx-auto max-w-5xl">
-          <div className="rounded-lg border border-black/10 bg-white p-8 dark:border-white/10 dark:bg-black">
+          <div className="rounded-lg border border-gray-200 bg-white p-8">
             <div className="mb-6 flex items-center gap-4">
-              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-purple-100 dark:bg-purple-950/20">
-                <Music className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-lg bg-purple-100">
+                <Music className="h-8 w-8 text-purple-600" />
               </div>
               <div>
                 <h3 className="font-semibold">{file.name}</h3>
-                <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="text-sm text-gray-600">
                   {file.mime_type}
                 </p>
               </div>
@@ -250,7 +276,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
     if (isVideo && signedUrl) {
       return (
         <div className="mx-auto max-w-5xl">
-          <div className="overflow-hidden rounded-lg border border-black/10 bg-black dark:border-white/10">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <video
               controls
               className="w-full"
@@ -267,7 +293,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
     if (isPDF && signedUrl) {
       return (
         <div className="mx-auto h-full w-full max-w-5xl">
-          <div className="h-full rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
+          <div className="h-full rounded-lg border border-gray-200 bg-white">
             <iframe
               src={signedUrl}
               className="h-full w-full rounded-lg"
@@ -282,9 +308,9 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
     if (isCode) {
       return (
         <div className="mx-auto max-w-5xl">
-          <div className="overflow-hidden rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
-            <div className="flex items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
-              <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+            <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+              <span className="text-xs font-medium text-gray-600">
                 {language} • {content.split('\n').length} lines
               </span>
               {signedUrl && (
@@ -292,18 +318,18 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
                   href={signedUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1 text-xs text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                  className="flex items-center gap-1 text-xs text-gray-600 hover:text-black"
                 >
                   Open in new tab
                   <ExternalLink className="h-3 w-3" />
                 </a>
               )}
             </div>
-            <div className="overflow-x-auto bg-zinc-50 dark:bg-zinc-900">
+            <div className="overflow-x-auto bg-gray-50">
               <pre className="p-4">
                 <code className="text-sm font-mono leading-relaxed">{content.split('\n').map((line, i) => (
                   <div key={i} className="flex">
-                    <span className="mr-4 inline-block w-12 select-none text-right text-zinc-400">
+                    <span className="mr-4 inline-block w-12 select-none text-right text-gray-400">
                       {i + 1}
                     </span>
                     <span>{line || '\n'}</span>
@@ -319,9 +345,9 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
     // Plain text
     return (
       <div className="mx-auto max-w-5xl">
-        <div className="rounded-lg border border-black/10 bg-white dark:border-white/10 dark:bg-black">
-          <div className="flex items-center justify-between border-b border-black/10 px-4 py-2 dark:border-white/10">
-            <span className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
+        <div className="rounded-lg border border-gray-200 bg-white">
+          <div className="flex items-center justify-between border-b border-gray-200 px-4 py-2">
+            <span className="text-xs font-medium text-gray-600">
               Plain Text
             </span>
             {signedUrl && (
@@ -329,7 +355,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
                 href={signedUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-xs text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                className="flex items-center gap-1 text-xs text-gray-600 hover:text-black"
               >
                 Open in new tab
                 <ExternalLink className="h-3 w-3" />
@@ -345,9 +371,9 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
   }
 
   return (
-    <div className="flex h-screen flex-col bg-zinc-50 dark:bg-zinc-950">
+    <div className="flex h-screen flex-col bg-gray-50">
       {/* Header */}
-      <header className="flex h-16 items-center justify-between border-b border-black/10 bg-white px-6 dark:border-white/10 dark:bg-black">
+      <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
@@ -360,19 +386,19 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
           </Button>
           <div className="flex items-center gap-3">
             {isCodeFile(file.name) ? (
-              <Code className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Code className="h-5 w-5 text-blue-600" />
             ) : isImage ? (
-              <ImageIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
+              <ImageIcon className="h-5 w-5 text-green-600" />
             ) : isAudio ? (
-              <Music className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <Music className="h-5 w-5 text-purple-600" />
             ) : isVideo ? (
-              <VideoIcon className="h-5 w-5 text-red-600 dark:text-red-400" />
+              <VideoIcon className="h-5 w-5 text-red-600" />
             ) : (
-              <FileText className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
+              <FileText className="h-5 w-5 text-gray-600" />
             )}
             <div>
               <h1 className="font-semibold">{file.name}</h1>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400">
+              <p className="text-xs text-gray-600">
                 {formatFileSize(file.size_bytes)} • {file.type}
               </p>
             </div>
@@ -381,7 +407,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
 
         <div className="flex items-center gap-2">
           {file.embedding_status && (
-            <div className="rounded-full bg-zinc-100 px-3 py-1 text-xs dark:bg-zinc-800">
+            <div className="rounded-full bg-gray-100 px-3 py-1 text-xs">
               Embeddings: <span className="font-medium">{file.embedding_status}</span>
             </div>
           )}
@@ -390,7 +416,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
               variant="outline"
               size="sm"
               onClick={() => setShowAnalysisModal(true)}
-              className="gap-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/20"
+              className="gap-2 text-blue-600 hover:bg-blue-50"
             >
               <Scan className="h-4 w-4" />
               Check Image
@@ -405,7 +431,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
             size="sm"
             onClick={handleDelete}
             disabled={deleting}
-            className="gap-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
+            className="gap-2 text-red-600 hover:bg-red-50"
           >
             {deleting ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -423,37 +449,37 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
 
         {/* Metadata */}
         {!loading && !error && (
-          <div className="mx-auto mt-6 max-w-5xl rounded-lg border border-black/10 bg-white p-4 dark:border-white/10 dark:bg-black">
+          <div className="mx-auto mt-6 max-w-5xl rounded-lg border border-gray-200 bg-white p-4">
             <h2 className="mb-3 font-semibold">File Information</h2>
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <dt className="text-zinc-600 dark:text-zinc-400">Created:</dt>
+                <dt className="text-gray-600">Created:</dt>
                 <dd className="font-medium">
                   {new Date(file.created_at).toLocaleString()}
                 </dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-zinc-600 dark:text-zinc-400">Size:</dt>
+                <dt className="text-gray-600">Size:</dt>
                 <dd className="font-medium">{formatFileSize(file.size_bytes)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-zinc-600 dark:text-zinc-400">Type:</dt>
+                <dt className="text-gray-600">Type:</dt>
                 <dd className="font-medium">{file.mime_type}</dd>
               </div>
               {file.description && (
                 <div>
-                  <dt className="mb-1 text-zinc-600 dark:text-zinc-400">Description:</dt>
+                  <dt className="mb-1 text-gray-600">Description:</dt>
                   <dd className="font-medium">{file.description}</dd>
                 </div>
               )}
               {file.tags && file.tags.length > 0 && (
                 <div>
-                  <dt className="mb-1 text-zinc-600 dark:text-zinc-400">Tags:</dt>
+                  <dt className="mb-1 text-gray-600">Tags:</dt>
                   <dd className="flex flex-wrap gap-2">
                     {file.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="rounded-full bg-zinc-100 px-2 py-1 text-xs dark:bg-zinc-800"
+                        className="rounded-full bg-gray-100 px-2 py-1 text-xs"
                       >
                         {tag}
                       </span>

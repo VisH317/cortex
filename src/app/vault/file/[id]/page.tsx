@@ -53,11 +53,9 @@ export default async function FileViewPage({
     .eq("user_id", user.id)
     .single()
 
-  // If file doesn't exist, redirect to parent folder or vault root
+  // If file doesn't exist, redirect to home
   if (error || !file) {
-    // Try to get the folder path if we have a file record with folder_id
-    const redirectPath = "/vault"
-    redirect(redirectPath)
+    redirect("/")
   }
 
   // Get signed URL for file

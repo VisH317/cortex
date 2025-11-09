@@ -14,9 +14,10 @@ interface FolderTreeProps {
   folders: FolderType[]
   currentPath: string
   onCreateFolder: (parentId: string | null) => void
+  patientId?: string | null
 }
 
-export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeProps) {
+export function FolderTree({ folders, currentPath, onCreateFolder, patientId = null }: FolderTreeProps) {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set())
 
   // Auto-expand folders in the current path
@@ -123,16 +124,16 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
     return (
       <div key={folder.id}>
         <div
-          className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
-            isActive ? 'bg-blue-50 font-medium text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 
-            inActivePath ? 'bg-black/5 dark:bg-white/5' : ''
+          className={`flex items-center gap-1 rounded-lg px-2 py-1.5 text-sm transition-colors hover:bg-blue-50 ${
+            isActive ? 'bg-blue-100 font-semibold text-blue-600' : 
+            inActivePath ? 'bg-blue-50' : ''
           }`}
           style={{ paddingLeft: `${level * 16 + 8}px` }}
         >
           {hasChildren ? (
             <button
               onClick={() => toggleFolder(folder.id)}
-              className="flex h-5 w-5 items-center justify-center hover:bg-black/10 rounded dark:hover:bg-white/10"
+              className="flex h-5 w-5 items-center justify-center hover:bg-white/10 rounded"
             >
               {isExpanded ? (
                 <ChevronDown className="h-4 w-4" />
@@ -145,13 +146,13 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
           )}
           
           <Link
-            href={`/vault/${folderPath}`}
+            href={patientId ? `/patient/${patientId}/${folderPath}` : `/${folderPath}`}
             className="flex flex-1 items-center gap-2 overflow-hidden"
           >
             {isExpanded || inActivePath ? (
-              <FolderOpen className={`h-4 w-4 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+              <FolderOpen className={`h-4 w-4 shrink-0 ${isActive ? 'text-blue-600' : ''}`} />
             ) : (
-              <Folder className={`h-4 w-4 shrink-0 ${isActive ? 'text-blue-600 dark:text-blue-400' : ''}`} />
+              <Folder className={`h-4 w-4 shrink-0 ${isActive ? 'text-blue-600' : ''}`} />
             )}
             <span className="truncate">{folder.name}</span>
           </Link>
@@ -159,7 +160,7 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
 
         {isExpanded && hasChildren && (
           <div className="relative">
-            <div className="absolute left-4 top-0 bottom-0 w-px bg-black/10 dark:bg-white/10" style={{ marginLeft: `${level * 16}px` }} />
+            <div className="absolute left-4 top-0 bottom-0 w-px bg-white/10" style={{ marginLeft: `${level * 16}px` }} />
             {folder.children.map(child => renderFolder(child, level + 1))}
           </div>
         )}
@@ -171,7 +172,7 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-black/10 px-4 py-3 dark:border-white/10">
+      <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
         <h2 className="text-sm font-semibold">Folders</h2>
         <Button
           variant="ghost"
@@ -185,9 +186,9 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
 
       <div className="flex-1 overflow-y-auto p-2">
         <Link
-          href="/vault"
-          className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:bg-black/5 dark:hover:bg-white/5 ${
-            currentPath === '' ? 'bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400' : 'text-zinc-700 dark:text-zinc-300'
+          href={patientId ? `/patient/${patientId}` : "/"}
+          className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm font-medium transition-colors hover:bg-blue-50 ${
+            currentPath === '' ? 'bg-blue-100 text-blue-600' : 'text-gray-700'
           }`}
         >
           <Folder className="h-4 w-4" />
@@ -196,7 +197,7 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
 
         {tree.length > 0 && (
           <>
-            <div className="mx-2 my-3 h-px bg-black/10 dark:bg-white/10" />
+            <div className="mx-2 my-3 h-px bg-white/10" />
             <div className="space-y-0.5">
               {tree.map(folder => renderFolder(folder))}
             </div>
@@ -204,7 +205,7 @@ export function FolderTree({ folders, currentPath, onCreateFolder }: FolderTreeP
         )}
 
         {tree.length === 0 && (
-          <div className="py-8 text-center text-sm text-zinc-500">
+          <div className="py-8 text-center text-sm text-gray-500">
             No folders yet
           </div>
         )}

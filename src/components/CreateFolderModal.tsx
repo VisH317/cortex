@@ -37,13 +37,13 @@ export function CreateFolderModal({ parentId, patientId = null, onClose, onSucce
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-md rounded-xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 p-4">
+      <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Create New Folder</h2>
           <button
             onClick={onClose}
-            className="rounded-lg p-1 hover:bg-black/10 dark:hover:bg-white/10"
+            className="rounded-lg p-1 hover:bg-white/10"
           >
             <X className="h-5 w-5" />
           </button>
@@ -63,7 +63,7 @@ export function CreateFolderModal({ parentId, patientId = null, onClose, onSucce
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
+            <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
               {error}
             </div>
           )}

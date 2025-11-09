@@ -33,64 +33,79 @@ export default function PatientList({ initialPatients }: PatientListProps) {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+      >
         <div>
-          <h1 className="text-3xl font-bold">Patients</h1>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          <h1 className="text-4xl font-bold text-gray-900">Patients</h1>
+          <p className="mt-1 text-base text-gray-600">
             {patients.length} patient{patients.length !== 1 ? "s" : ""} total
           </p>
         </div>
-        <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
+        <Button onClick={() => setIsAddModalOpen(true)} className="gap-2 shadow-lg">
+          <Plus className="h-5 w-5" />
           Add Patient
         </Button>
-      </div>
+      </motion.div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-400" />
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="relative"
+      >
+        <Search className="absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
         <Input
           type="text"
           placeholder="Search patients by name or phone..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
+          className="pl-14 shadow-sm"
         />
-      </div>
+      </motion.div>
 
       {/* Patient Grid */}
       {filteredPatients.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredPatients.map((patient) => (
-            <PatientCard 
-              key={patient.id} 
-              patient={patient}
-              onUpdate={() => window.location.reload()}
-            />
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredPatients.map((patient, index) => (
+            <motion.div
+              key={patient.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 + index * 0.05 }}
+            >
+              <PatientCard 
+                patient={patient}
+                onUpdate={() => window.location.reload()}
+              />
+            </motion.div>
           ))}
         </div>
       ) : (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-black/10 bg-zinc-50 p-12 dark:border-white/10 dark:bg-zinc-900/50"
+          className="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-blue-200 bg-blue-50/30 p-16"
         >
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
-            <Users className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-blue-500 to-orange-500 shadow-lg">
+            <Users className="h-10 w-10 text-white" strokeWidth={2} />
           </div>
-          <h3 className="mb-2 text-lg font-semibold">
+          <h3 className="mb-3 text-2xl font-bold text-gray-900">
             {searchQuery ? "No patients found" : "No patients yet"}
           </h3>
-          <p className="mb-6 max-w-sm text-center text-sm text-zinc-600 dark:text-zinc-400">
+          <p className="mb-8 max-w-sm text-center text-base text-gray-600">
             {searchQuery
               ? "Try adjusting your search query"
               : "Get started by adding your first patient"}
           </p>
           {!searchQuery && (
-            <Button onClick={() => setIsAddModalOpen(true)} className="gap-2">
-              <Plus className="h-4 w-4" />
+            <Button onClick={() => setIsAddModalOpen(true)} className="gap-2 shadow-lg">
+              <Plus className="h-5 w-5" />
               Add Your First Patient
             </Button>
           )}

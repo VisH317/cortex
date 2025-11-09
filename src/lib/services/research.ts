@@ -1,9 +1,11 @@
 /**
  * Medical Research Service
  * Uses SerpAPI to search Google Scholar for scholarly articles
+ * Automatically saves top sources to patient's file system
  */
 
 import { getJson } from "serpapi"
+import { createWebsiteShortcutsBatch } from "@/lib/actions/websites"
 
 export interface ScholarResult {
   title: string
@@ -117,14 +119,20 @@ function calculateRelevanceScore(result: any): number {
 
 /**
  * Search Google Scholar for medical research
+ * @param autoSaveTop2 - If true, automatically save top 2 sources as website shortcuts
+ * @param userId - Required if autoSaveTop2 is true
+ * @param folderId - Optional folder ID to save websites to
  */
 export async function searchGoogleScholar(
   query: string,
   patientContext?: PatientContext,
   options: {
     maxResults?: number
+    autoSaveTop2?: boolean
+    userId?: string
+    folderId?: string | null
   } = {}
-): Promise<{ results: ScholarResult[]; error?: string }> {
+): Promise<{ results: ScholarResult[]; error?: string; savedWebsites?: string[] }> {
   try {
     const apiKey = process.env.SERPAPI_API_KEY
     
@@ -181,7 +189,42 @@ export async function searchGoogleScholar(
     // Sort by relevance score
     results.sort((a, b) => (b.relevance_score || 0) - (a.relevance_score || 0))
     
-    return { results }
+    // Auto-save top 2 sources if requested
+    let savedWebsites: string[] = []
+    if (options.autoSaveTop2 && options.userId && results.length > 0) {
+      console.log('[Research] Auto-saving top 2 sources to file system')
+      
+      const top2 = results.slice(0, 2)
+      const websitesToCreate = top2.map(result => ({
+        url: result.link,
+        title: result.title,
+        description: `${result.snippet}\n\nAuthors: ${result.authors || 'Unknown'}\nPublication: ${result.publication || 'N/A'}${result.cited_by ? `\nCited by: ${result.cited_by}` : ''}`,
+        folderId: options.folderId || null,
+      }))
+      
+      try {
+        const batchResult = await createWebsiteShortcutsBatch(
+          websitesToCreate,
+          options.userId,
+          true // trigger embedding
+        )
+        
+        savedWebsites = batchResult.created
+        
+        if (batchResult.created.length > 0) {
+          console.log(`[Research] Successfully saved ${batchResult.created.length} sources with background embedding`)
+        }
+        
+        if (batchResult.failed.length > 0) {
+          console.log(`[Research] Failed to save ${batchResult.failed.length} sources:`, batchResult.failed)
+        }
+      } catch (error: any) {
+        console.error('[Research] Error auto-saving sources:', error)
+        // Don't fail the whole search if saving fails
+      }
+    }
+    
+    return { results, savedWebsites }
   } catch (error: any) {
     console.error('[Research] Error searching Google Scholar:', error)
     return {

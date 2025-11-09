@@ -14,6 +14,8 @@ interface PatientDetailClientProps {
   files: FileType[]
   shortcuts: WebsiteShortcut[]
   patientId: string
+  currentFolder?: Folder | null
+  slugPath?: string[]
 }
 
 export default function PatientDetailClient({
@@ -22,11 +24,13 @@ export default function PatientDetailClient({
   files,
   shortcuts,
   patientId,
+  currentFolder = null,
+  slugPath = [],
 }: PatientDetailClientProps) {
   const [isChatOpen, setIsChatOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-gradient-to-b from-white to-zinc-50 dark:from-black dark:to-zinc-950">
+    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-white to-orange-50">
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col overflow-hidden">
         <div className="px-4 py-4 md:px-6 lg:px-8">
@@ -35,11 +39,11 @@ export default function PatientDetailClient({
         
         <div className="flex-1 overflow-hidden">
           <VaultContent
-            currentFolder={null}
+            currentFolder={currentFolder}
             folders={folders}
             files={files}
             shortcuts={shortcuts}
-            slugPath={[]}
+            slugPath={slugPath}
             patientId={patientId}
           />
         </div>
@@ -48,10 +52,10 @@ export default function PatientDetailClient({
         {!isChatOpen && (
           <Button
             onClick={() => setIsChatOpen(true)}
-            className="fixed bottom-6 right-6 z-30 hidden h-14 w-14 rounded-full p-0 shadow-2xl md:flex"
+            className="fixed bottom-8 right-8 z-30 hidden h-16 w-16 rounded-full bg-gradient-to-br from-blue-500 to-orange-500 p-0 shadow-2xl hover:from-blue-600 hover:to-orange-600 md:flex"
             title="Open AI Assistant"
           >
-            <Brain className="h-6 w-6" />
+            <Brain className="h-7 w-7" />
           </Button>
         )}
       </div>

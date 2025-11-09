@@ -195,11 +195,6 @@ export interface Database {
           url: string
           title: string
           description: string | null
-          favicon_url: string | null
-          og_image: string | null
-          og_description: string | null
-          author: string | null
-          published_date: string | null
           embedding_status: EmbeddingStatus
           created_at: string
           updated_at: string
@@ -211,11 +206,6 @@ export interface Database {
           url: string
           title: string
           description?: string | null
-          favicon_url?: string | null
-          og_image?: string | null
-          og_description?: string | null
-          author?: string | null
-          published_date?: string | null
           embedding_status?: EmbeddingStatus
           created_at?: string
           updated_at?: string
@@ -227,11 +217,6 @@ export interface Database {
           url?: string
           title?: string
           description?: string | null
-          favicon_url?: string | null
-          og_image?: string | null
-          og_description?: string | null
-          author?: string | null
-          published_date?: string | null
           embedding_status?: EmbeddingStatus
           created_at?: string
           updated_at?: string

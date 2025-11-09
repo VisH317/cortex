@@ -54,7 +54,7 @@ export default function DeletePatientModal({ patient, isOpen, onClose, onSuccess
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-red-900/10 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -63,35 +63,35 @@ export default function DeletePatientModal({ patient, isOpen, onClose, onSuccess
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-md rounded-2xl border border-red-200 bg-white p-6 shadow-2xl dark:border-red-900 dark:bg-zinc-900"
+              className="relative w-full max-w-md rounded-3xl border-2 border-red-300 bg-white p-8 shadow-2xl"
             >
               {/* Header */}
-              <div className="mb-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-red-100 dark:bg-red-950">
-                    <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <div className="mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-100 shadow-lg">
+                    <AlertTriangle className="h-7 w-7 text-red-600" strokeWidth={2} />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">Delete Patient</h2>
+                    <h2 className="text-2xl font-bold text-gray-900">Delete Patient</h2>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="rounded-lg p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="rounded-2xl p-2 transition-colors hover:bg-gray-100"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
 
               <div className="mb-6">
-                <p className="mb-4 text-sm text-zinc-600 dark:text-zinc-400">
+                <p className="mb-4 text-base text-gray-700">
                   Are you sure you want to delete <strong>{patient.name}</strong>? This action cannot be undone.
                 </p>
-                <div className="rounded-lg bg-red-50 p-4 dark:bg-red-950/30">
-                  <p className="mb-2 text-sm font-semibold text-red-900 dark:text-red-300">
+                <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-5">
+                  <p className="mb-3 text-sm font-bold text-red-900">
                     This will permanently delete:
                   </p>
-                  <ul className="list-inside list-disc space-y-1 text-sm text-red-800 dark:text-red-400">
+                  <ul className="list-inside list-disc space-y-2 text-sm text-red-800">
                     <li>All patient information</li>
                     <li>All medical records and files</li>
                     <li>All folders and organization</li>
@@ -101,14 +101,14 @@ export default function DeletePatientModal({ patient, isOpen, onClose, onSuccess
               </div>
 
               {error && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
+                <div className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
                   {error}
                 </div>
               )}
 
               {/* Confirmation Input */}
               <div className="mb-6">
-                <label className="mb-2 block text-sm font-medium">
+                <label className="mb-2 block text-sm font-medium text-gray-700">
                   Type <span className="font-bold text-red-600">{patient.name}</span> to confirm:
                 </label>
                 <input
@@ -119,7 +119,7 @@ export default function DeletePatientModal({ patient, isOpen, onClose, onSuccess
                     if (error) setError(null)
                   }}
                   placeholder="Enter patient name"
-                  className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-800"
+                  className="h-11 w-full rounded-2xl border-2 border-gray-200 bg-white px-4 text-sm text-gray-900 transition-all focus:border-red-400 focus:outline-none focus:ring-4 focus:ring-red-100"
                   disabled={isLoading}
                 />
               </div>
@@ -137,7 +137,7 @@ export default function DeletePatientModal({ patient, isOpen, onClose, onSuccess
                 </Button>
                 <Button
                   onClick={handleDelete}
-                  className="flex-1 bg-red-600 hover:bg-red-700"
+                  className="flex-1 bg-gradient-to-r from-red-600 to-red-700 text-white hover:from-red-700 hover:to-red-800"
                   disabled={isLoading || confirmText !== patient.name}
                 >
                   {isLoading ? "Deleting..." : "Delete Patient"}
@@ -150,4 +150,3 @@ export default function DeletePatientModal({ patient, isOpen, onClose, onSuccess
     </AnimatePresence>
   )
 }
-

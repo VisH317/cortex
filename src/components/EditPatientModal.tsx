@@ -53,19 +53,16 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
 
-    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Name is required"
     } else if (formData.name.trim().length < 2) {
       newErrors.name = "Name must be at least 2 characters"
     }
 
-    // Phone validation (optional, but if provided should be valid)
     if (formData.phone && !/^[\d\s\-\+\(\)]+$/.test(formData.phone)) {
       newErrors.phone = "Invalid phone number format"
     }
 
-    // Age validation
     if (formData.age) {
       const ageNum = parseInt(formData.age)
       if (isNaN(ageNum) || ageNum < 0 || ageNum > 150) {
@@ -73,7 +70,6 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
       }
     }
 
-    // Date of birth validation
     if (formData.date_of_birth) {
       const dob = new Date(formData.date_of_birth)
       const today = new Date()
@@ -132,7 +128,7 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-blue-900/20 backdrop-blur-sm"
           />
 
           {/* Modal */}
@@ -141,45 +137,42 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-black/10 bg-white p-8 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
+              className="relative w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-3xl border-2 border-gray-200 bg-white p-8 shadow-2xl"
             >
               {/* Header */}
               <div className="mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-950">
-                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                <div className="flex items-center gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 shadow-lg">
+                    <User className="h-7 w-7 text-white" strokeWidth={2} />
                   </div>
                   <div>
-                    <h2 className="text-2xl font-bold">Edit Patient</h2>
-                    <p className="text-sm text-zinc-600 dark:text-zinc-400">
+                    <h2 className="text-2xl font-bold text-gray-900">Edit Patient</h2>
+                    <p className="text-sm text-gray-600">
                       Update patient information
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={onClose}
-                  className="rounded-lg p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  className="rounded-2xl p-2 transition-colors hover:bg-gray-100"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-5 w-5 text-gray-600" />
                 </button>
               </div>
 
               {error && (
-                <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-950/50 dark:text-red-400">
+                <div className="mb-4 rounded-2xl border-2 border-red-200 bg-red-50 p-4 text-sm font-medium text-red-600">
                   {error}
                 </div>
               )}
 
-              {/* Form */}
+              {/* Form - Same as Add Patient Modal */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Basic Information */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                    Basic Information
-                  </h3>
+                  <h3 className="mb-4 text-base font-bold text-gray-900">Basic Information</h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="md:col-span-2">
-                      <label className="mb-1 block text-sm font-medium">
+                      <label className="mb-2 block text-sm font-medium text-gray-700">
                         Full Name <span className="text-red-500">*</span>
                       </label>
                       <Input
@@ -192,12 +185,10 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                         placeholder="John Doe"
                         className={errors.name ? "border-red-500" : ""}
                       />
-                      {errors.name && (
-                        <p className="mt-1 text-xs text-red-600">{errors.name}</p>
-                      )}
+                      {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name}</p>}
                     </div>
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Phone</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Phone</label>
                       <Input
                         type="tel"
                         value={formData.phone}
@@ -208,12 +199,10 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                         placeholder="+1 (555) 123-4567"
                         className={errors.phone ? "border-red-500" : ""}
                       />
-                      {errors.phone && (
-                        <p className="mt-1 text-xs text-red-600">{errors.phone}</p>
-                      )}
+                      {errors.phone && <p className="mt-1 text-xs text-red-600">{errors.phone}</p>}
                     </div>
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Age</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Age</label>
                       <Input
                         type="number"
                         value={formData.age}
@@ -226,25 +215,20 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                         max="150"
                         className={errors.age ? "border-red-500" : ""}
                       />
-                      {errors.age && (
-                        <p className="mt-1 text-xs text-red-600">{errors.age}</p>
-                      )}
+                      {errors.age && <p className="mt-1 text-xs text-red-600">{errors.age}</p>}
                     </div>
                   </div>
                 </div>
 
-                {/* Medical Information */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                    Medical Information
-                  </h3>
+                  <h3 className="mb-4 text-base font-bold text-gray-900">Medical Information</h3>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Gender</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Gender</label>
                       <select
                         value={formData.gender}
                         onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })}
-                        className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-800"
+                        className="h-11 w-full rounded-2xl border-2 border-gray-200 bg-white px-4 text-sm text-gray-900 transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100"
                       >
                         <option value="">Select gender</option>
                         <option value="male">Male</option>
@@ -254,11 +238,11 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Blood Type</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Blood Type</label>
                       <select
                         value={formData.blood_type}
                         onChange={(e) => setFormData({ ...formData, blood_type: e.target.value as BloodType })}
-                        className="h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-800"
+                        className="h-11 w-full rounded-2xl border-2 border-gray-200 bg-white px-4 text-sm text-gray-900 transition-all focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100"
                       >
                         <option value="">Select blood type</option>
                         <option value="A+">A+</option>
@@ -272,7 +256,7 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                       </select>
                     </div>
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Date of Birth</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Date of Birth</label>
                       <Input
                         type="date"
                         value={formData.date_of_birth}
@@ -282,21 +266,16 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                         }}
                         className={errors.date_of_birth ? "border-red-500" : ""}
                       />
-                      {errors.date_of_birth && (
-                        <p className="mt-1 text-xs text-red-600">{errors.date_of_birth}</p>
-                      )}
+                      {errors.date_of_birth && <p className="mt-1 text-xs text-red-600">{errors.date_of_birth}</p>}
                     </div>
                   </div>
                 </div>
 
-                {/* Contact & Insurance */}
                 <div>
-                  <h3 className="mb-3 text-sm font-semibold text-zinc-700 dark:text-zinc-300">
-                    Contact & Insurance
-                  </h3>
+                  <h3 className="mb-4 text-base font-bold text-gray-900">Contact & Insurance</h3>
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Address</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Address</label>
                       <Input
                         type="text"
                         value={formData.address}
@@ -305,7 +284,7 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Emergency Contact</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Emergency Contact</label>
                       <Input
                         type="text"
                         value={formData.emergency_contact}
@@ -314,7 +293,7 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                       />
                     </div>
                     <div>
-                      <label className="mb-1 block text-sm font-medium">Insurance Info</label>
+                      <label className="mb-2 block text-sm font-medium text-gray-700">Insurance Info</label>
                       <Input
                         type="text"
                         value={formData.insurance_info}
@@ -325,7 +304,6 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
                   </div>
                 </div>
 
-                {/* Actions */}
                 <div className="flex gap-3 pt-4">
                   <Button
                     type="button"
@@ -352,4 +330,3 @@ export default function EditPatientModal({ patient, isOpen, onClose, onSuccess }
     </AnimatePresence>
   )
 }
-

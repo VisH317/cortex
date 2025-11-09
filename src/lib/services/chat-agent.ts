@@ -107,8 +107,12 @@ async function handleFunctionCall(
     console.log(`[Agent] Patient context:`, patientContext)
 
     // Search Google Scholar using SerpAPI with patient context
-    const { results, error } = await searchGoogleScholar(query, patientContext, {
+    // Auto-save top 2 sources to the patient's file system with Playwright scraping
+    const { results, error, savedWebsites } = await searchGoogleScholar(query, patientContext, {
       maxResults: 5,
+      autoSaveTop2: true,
+      userId: userId,
+      folderId: null, // Save to root of patient folder (could be enhanced to find "Research" folder)
     })
 
     if (error) {
@@ -117,6 +121,10 @@ async function handleFunctionCall(
     }
 
     console.log(`[Agent] Retrieved ${results.length} research results`)
+    
+    if (savedWebsites && savedWebsites.length > 0) {
+      console.log(`[Agent] Auto-saved ${savedWebsites.length} top sources with Playwright scraping and background embedding`)
+    }
 
     if (results.length === 0) {
       return "No research papers found for this query. Try rephrasing or using more specific medical terms."
@@ -124,8 +132,15 @@ async function handleFunctionCall(
 
     // Format results for the assistant
     const formatted = formatResearchResultsForAgent(results)
-    console.log(`[Agent] Formatted results length: ${formatted.length} characters`)
-    return formatted
+    
+    // Add note about saved sources if any were saved
+    let finalMessage = formatted
+    if (savedWebsites && savedWebsites.length > 0) {
+      finalMessage += `\n\n✅ Note: The top ${savedWebsites.length} most relevant sources have been automatically saved to the patient's records and are being processed for future reference.`
+    }
+    
+    console.log(`[Agent] Formatted results length: ${finalMessage.length} characters`)
+    return finalMessage
   }
 
   return "Unknown function called"
@@ -136,9 +151,9 @@ async function handleFunctionCall(
  */
 export async function chatWithAgent(
   messages: ChatMessage[],
-  patientId: string,
+  patientId: string | null,
   userId: string,
-  patientName?: string,
+  patientName?: string | null,
   patientInfo?: {
     age?: number | null
     gender?: string | null
@@ -155,7 +170,8 @@ export async function chatWithAgent(
     size_bytes: number
     created_at: string
   }>,
-  researchModeEnabled: boolean = false
+  researchModeEnabled: boolean = false,
+  fileSystemStructure?: string
 ): Promise<{
   response: string
   citations?: Array<{
@@ -180,8 +196,14 @@ ${patientInfo.current_medications ? `- Current Medications: ${patientInfo.curren
 ${patientInfo.medical_history ? `- Medical History: ${patientInfo.medical_history}` : ""}` : `
 - Name: ${patientName || "Unknown"}`
 
-    // Format file list
-    const filesInfo = filesList && filesList.length > 0 ? `
+    // Format file system structure
+    const filesInfo = fileSystemStructure ? `
+
+**Patient File System Structure:**
+${fileSystemStructure}
+
+All files have been indexed and are searchable using the retrieve_patient_records function. The structure above shows the complete hierarchical organization of all medical records and documents.` : 
+    filesList && filesList.length > 0 ? `
 
 **Available Medical Records (${filesList.length} files):**
 ${filesList.map((file, i) => {

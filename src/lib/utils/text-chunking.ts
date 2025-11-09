@@ -203,27 +203,89 @@ export function chunkMarkdown(
 }
 
 /**
- * Extract text content from HTML
+ * Extract text content from HTML with improved semantic understanding
  */
 export function extractTextFromHTML(html: string): string {
-  // Remove script and style tags
+  // Remove script, style, noscript, and SVG tags (including their content)
   let text = html.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "")
   text = text.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, "")
+  text = text.replace(/<noscript\b[^<]*(?:(?!<\/noscript>)<[^<]*)*<\/noscript>/gi, "")
+  text = text.replace(/<svg\b[^<]*(?:(?!<\/svg>)<[^<]*)*<\/svg>/gi, "")
   
-  // Remove HTML tags
+  // Remove common non-content elements (nav, header, footer, ads)
+  text = text.replace(/<nav\b[^<]*(?:(?!<\/nav>)<[^<]*)*<\/nav>/gi, "")
+  text = text.replace(/<header\b[^<]*(?:(?!<\/header>)<[^<]*)*<\/header>/gi, "")
+  text = text.replace(/<footer\b[^<]*(?:(?!<\/footer>)<[^<]*)*<\/footer>/gi, "")
+  text = text.replace(/<aside\b[^<]*(?:(?!<\/aside>)<[^<]*)*<\/aside>/gi, "")
+  // Remove elements with common ad/navigation class names
+  text = text.replace(/<div[^>]*class="[^"]*(?:nav|menu|sidebar|ad|advertisement|cookie|popup)[^"]*"[^>]*>[\s\S]*?<\/div>/gi, "")
+  
+  // Extract alt text from images (add as separate text)
+  const altTextMatches = text.matchAll(/<img[^>]+alt="([^"]+)"/gi)
+  const altTexts: string[] = []
+  for (const match of altTextMatches) {
+    if (match[1]) {
+      altTexts.push(match[1])
+    }
+  }
+  
+  // Extract meta descriptions and Open Graph content
+  const metaTexts: string[] = []
+  const metaDescMatch = text.match(/<meta\s+name="description"\s+content="([^"]+)"/i)
+  if (metaDescMatch?.[1]) {
+    metaTexts.push(metaDescMatch[1])
+  }
+  const ogDescMatch = text.match(/<meta\s+property="og:description"\s+content="([^"]+)"/i)
+  if (ogDescMatch?.[1] && ogDescMatch[1] !== metaDescMatch?.[1]) {
+    metaTexts.push(ogDescMatch[1])
+  }
+  
+  // Add line breaks for block elements to preserve structure
+  text = text.replace(/<\/p>/gi, "\n\n")
+  text = text.replace(/<br\s*\/?>/gi, "\n")
+  text = text.replace(/<\/div>/gi, "\n")
+  text = text.replace(/<\/h[1-6]>/gi, "\n\n")
+  text = text.replace(/<\/li>/gi, "\n")
+  text = text.replace(/<\/tr>/gi, "\n")
+  text = text.replace(/<\/td>/gi, " | ")
+  text = text.replace(/<\/th>/gi, " | ")
+  
+  // Remove all remaining HTML tags
   text = text.replace(/<[^>]+>/g, " ")
   
-  // Decode HTML entities
+  // Comprehensive HTML entity decoding
   text = text.replace(/&nbsp;/g, " ")
   text = text.replace(/&amp;/g, "&")
   text = text.replace(/&lt;/g, "<")
   text = text.replace(/&gt;/g, ">")
   text = text.replace(/&quot;/g, '"')
   text = text.replace(/&#39;/g, "'")
+  text = text.replace(/&apos;/g, "'")
+  text = text.replace(/&mdash;/g, "—")
+  text = text.replace(/&ndash;/g, "–")
+  text = text.replace(/&hellip;/g, "...")
+  text = text.replace(/&ldquo;/g, '"')
+  text = text.replace(/&rdquo;/g, '"')
+  text = text.replace(/&lsquo;/g, "'")
+  text = text.replace(/&rsquo;/g, "'")
+  text = text.replace(/&copy;/g, "©")
+  text = text.replace(/&reg;/g, "®")
+  text = text.replace(/&trade;/g, "™")
+  // Numeric entities
+  text = text.replace(/&#(\d+);/g, (match, dec) => String.fromCharCode(parseInt(dec)))
+  text = text.replace(/&#x([0-9a-f]+);/gi, (match, hex) => String.fromCharCode(parseInt(hex, 16)))
   
-  // Clean up whitespace
-  text = text.replace(/\s+/g, " ")
+  // Clean up whitespace but preserve paragraph breaks
+  text = text.replace(/[ \t]+/g, " ") // Multiple spaces/tabs to single space
+  text = text.replace(/\n\s+\n/g, "\n\n") // Clean up whitespace around line breaks
+  text = text.replace(/\n{3,}/g, "\n\n") // Max 2 consecutive line breaks
   text = text.trim()
+  
+  // Prepend meta descriptions and alt texts if we found them
+  const additionalContent = [...metaTexts, ...altTexts]
+  if (additionalContent.length > 0) {
+    text = additionalContent.join("\n") + "\n\n" + text
+  }
   
   return text
 }

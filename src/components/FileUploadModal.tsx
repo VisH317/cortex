@@ -193,14 +193,14 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
   const canUpload = files.length > 0 && !uploading && files.some(f => f.status === "pending")
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-2xl rounded-xl border border-black/10 bg-white shadow-xl dark:border-white/10 dark:bg-zinc-900">
-        <div className="flex items-center justify-between border-b border-black/10 p-6 dark:border-white/10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 p-4">
+      <div className="w-full max-w-2xl rounded-xl border border-gray-200 bg-white shadow-xl">
+        <div className="flex items-center justify-between border-b border-gray-200 p-6">
           <h2 className="text-lg font-semibold">Upload Files</h2>
           <button
             onClick={onClose}
             disabled={uploading}
-            className="rounded-lg p-1 hover:bg-black/10 disabled:opacity-50 dark:hover:bg-white/10"
+            className="rounded-lg p-1 hover:bg-white/10 disabled:opacity-50"
           >
             <X className="h-5 w-5" />
           </button>
@@ -211,8 +211,8 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
           <div
             className={`relative rounded-lg border-2 border-dashed p-12 text-center transition-colors ${
               dragActive
-                ? "border-blue-500 bg-blue-50 dark:bg-blue-950/20"
-                : "border-black/20 hover:border-black/40 dark:border-white/20 dark:hover:border-white/40"
+                ? "border-blue-500 bg-blue-50"
+                : "border-gray-300 hover:border-black/40"
             }`}
             onDragEnter={handleDrag}
             onDragLeave={handleDrag}
@@ -226,9 +226,9 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
               onChange={handleFileInput}
               className="hidden"
             />
-            <Upload className="mx-auto mb-4 h-12 w-12 text-zinc-400" />
+            <Upload className="mx-auto mb-4 h-12 w-12 text-gray-400" />
             <p className="mb-2 text-sm font-medium">Drag and drop files here</p>
-            <p className="mb-4 text-xs text-zinc-600 dark:text-zinc-400">
+            <p className="mb-4 text-xs text-gray-600">
               Supports documents, code, PDFs, images, audio, and video
             </p>
             <Button
@@ -250,7 +250,7 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
                 {!uploading && (
                   <button
                     onClick={() => setFiles([])}
-                    className="text-xs text-zinc-600 hover:text-black dark:text-zinc-400 dark:hover:text-white"
+                    className="text-xs text-gray-600 hover:text-black"
                   >
                     Clear all
                   </button>
@@ -261,12 +261,12 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
                 {files.map(fileItem => (
                   <div
                     key={fileItem.id}
-                    className="flex items-center gap-3 rounded-lg border border-black/10 bg-zinc-50 p-3 dark:border-white/10 dark:bg-zinc-800"
+                    className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3"
                   >
-                    <FileText className="h-5 w-5 shrink-0 text-zinc-600 dark:text-zinc-400" />
+                    <FileText className="h-5 w-5 shrink-0 text-gray-600" />
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-sm font-medium">{fileItem.file.name}</p>
-                      <p className="text-xs text-zinc-600 dark:text-zinc-400">
+                      <p className="text-xs text-gray-600">
                         {formatFileSize(fileItem.file.size)}
                       </p>
                     </div>
@@ -274,7 +274,7 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
                     {fileItem.status === "pending" && !uploading && (
                       <button
                         onClick={() => removeFile(fileItem.id)}
-                        className="shrink-0 rounded p-1 hover:bg-black/10 dark:hover:bg-white/10"
+                        className="shrink-0 rounded p-1 hover:bg-white/10"
                       >
                         <X className="h-4 w-4" />
                       </button>
@@ -300,7 +300,7 @@ export function FileUploadModal({ folderId, patientId = null, onClose, onSuccess
           )}
         </div>
 
-        <div className="flex justify-end gap-3 border-t border-black/10 p-6 dark:border-white/10">
+        <div className="flex justify-end gap-3 border-t border-gray-200 p-6">
           <Button variant="outline" onClick={onClose} disabled={uploading}>
             Cancel
           </Button>

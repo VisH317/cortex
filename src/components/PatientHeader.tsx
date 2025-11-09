@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { User, Phone, Droplet, Calendar, MapPin, AlertCircle, FileText, Edit2, Save, X } from "lucide-react"
+import { User, Phone, Droplet, Calendar, MapPin, AlertCircle, FileText, Edit2, Save, X, PhoneCall } from "lucide-react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { updatePatient } from "@/lib/actions/patients"
@@ -26,6 +26,57 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
     insurance_info: patient.insurance_info || "",
   })
   const [isLoading, setIsLoading] = useState(false)
+  const [isCalling, setIsCalling] = useState(false)
+  const [callStatus, setCallStatus] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
+
+  const handleCallPatient = async () => {
+    if (!patient.phone) {
+      setCallStatus({ message: "No phone number on file", type: 'error' })
+      setTimeout(() => setCallStatus(null), 5000)
+      return
+    }
+
+    setIsCalling(true)
+    setCallStatus(null)
+
+    try {
+      const response = await fetch("/api/retell/call", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          patientId: patient.id,
+          phoneNumber: patient.phone,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setCallStatus({ 
+          message: `Call initiated successfully! Call ID: ${result.callId}`, 
+          type: 'success' 
+        })
+        setTimeout(() => setCallStatus(null), 10000)
+      } else {
+        setCallStatus({ 
+          message: `Failed to initiate call: ${result.error}`, 
+          type: 'error' 
+        })
+        setTimeout(() => setCallStatus(null), 5000)
+      }
+    } catch (error: any) {
+      console.error("Error calling patient:", error)
+      setCallStatus({ 
+        message: `Error: ${error.message}`, 
+        type: 'error' 
+      })
+      setTimeout(() => setCallStatus(null), 5000)
+    } finally {
+      setIsCalling(false)
+    }
+  }
 
   const handleSave = async () => {
     setIsLoading(true)
@@ -78,13 +129,13 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
   }
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
+    <div className="overflow-hidden rounded-3xl border-2 border-gray-200 bg-white shadow-lg">
       {/* Main Info */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-6 dark:from-blue-950/30 dark:to-purple-950/30">
+      <div className="bg-gradient-to-r from-blue-100 via-blue-50 to-orange-50 p-8">
         <div className="flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
-              <User className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+          <div className="flex items-center gap-5">
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 shadow-lg">
+              <User className="h-10 w-10 text-white" strokeWidth={2} />
             </div>
             <div>
               {isEditing ? (
@@ -95,9 +146,9 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
                   className="mb-1 text-2xl font-bold"
                 />
               ) : (
-                <h1 className="text-2xl font-bold">{patient.name}</h1>
+                <h1 className="text-3xl font-bold text-gray-900">{patient.name}</h1>
               )}
-              <div className="flex items-center gap-3 text-sm text-zinc-600 dark:text-zinc-400">
+              <div className="flex items-center gap-3 text-base text-gray-600">
                 {isEditing ? (
                   <>
                     <Input
@@ -110,7 +161,7 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
                     <select
                       value={formData.gender}
                       onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-                      className="rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/10 dark:bg-zinc-800"
+                      className="rounded-2xl border-2 border-gray-200 bg-white px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100"
                     >
                       <option value="">Gender</option>
                       <option value="male">Male</option>
@@ -171,12 +222,14 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
       </div>
 
       {/* Details Grid */}
-      <div className="grid gap-4 p-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-6 p-8 sm:grid-cols-2 lg:grid-cols-3">
         {/* Phone */}
-        <div className="flex items-start gap-3">
-          <Phone className="mt-1 h-4 w-4 text-zinc-400" />
-          <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Phone</p>
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100">
+            <Phone className="h-5 w-5 text-blue-600" />
+          </div>
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-gray-700">Phone</p>
             {isEditing ? (
               <Input
                 type="tel"
@@ -185,21 +238,43 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
                 placeholder="Phone number"
               />
             ) : (
-              <p className="text-sm font-medium">{patient.phone || "Not provided"}</p>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium">{patient.phone || "Not provided"}</p>
+                {patient.phone && !isEditing && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCallPatient}
+                    disabled={isCalling}
+                    className="h-7 gap-1.5 px-2 text-xs"
+                    title="Call patient with AI assistant"
+                  >
+                    <PhoneCall className="h-3 w-3" />
+                    {isCalling ? "Calling..." : "Call"}
+                  </Button>
+                )}
+              </div>
+            )}
+            {callStatus && (
+              <p className={`mt-1 text-xs ${callStatus.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                {callStatus.message}
+              </p>
             )}
           </div>
         </div>
 
         {/* Blood Type */}
-        <div className="flex items-start gap-3">
-          <Droplet className="mt-1 h-4 w-4 text-red-500" />
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-red-100">
+            <Droplet className="h-5 w-5 text-red-600" />
+          </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Blood Type</p>
+            <p className="text-sm font-semibold text-gray-700">Blood Type</p>
             {isEditing ? (
               <select
                 value={formData.blood_type}
                 onChange={(e) => setFormData({ ...formData, blood_type: e.target.value })}
-                className="w-full rounded-lg border border-black/10 bg-white px-2 py-1 text-sm dark:border-white/10 dark:bg-zinc-800"
+                className="w-full rounded-2xl border-2 border-gray-200 bg-white px-3 py-1.5 text-sm focus:border-blue-400 focus:outline-none focus:ring-4 focus:ring-blue-100"
               >
                 <option value="">Select</option>
                 <option value="A+">A+</option>
@@ -218,10 +293,12 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
         </div>
 
         {/* Date of Birth */}
-        <div className="flex items-start gap-3">
-          <Calendar className="mt-1 h-4 w-4 text-zinc-400" />
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100">
+            <Calendar className="h-5 w-5 text-orange-600" />
+          </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Date of Birth</p>
+            <p className="text-sm font-semibold text-gray-700">Date of Birth</p>
             {isEditing ? (
               <Input
                 type="date"
@@ -235,10 +312,12 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
         </div>
 
         {/* Address */}
-        <div className="flex items-start gap-3">
-          <MapPin className="mt-1 h-4 w-4 text-zinc-400" />
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100">
+            <MapPin className="h-5 w-5 text-blue-600" />
+          </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Address</p>
+            <p className="text-sm font-semibold text-gray-700">Address</p>
             {isEditing ? (
               <Input
                 type="text"
@@ -253,10 +332,12 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
         </div>
 
         {/* Emergency Contact */}
-        <div className="flex items-start gap-3">
-          <AlertCircle className="mt-1 h-4 w-4 text-orange-500" />
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-orange-100">
+            <AlertCircle className="h-5 w-5 text-orange-600" />
+          </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Emergency Contact</p>
+            <p className="text-sm font-semibold text-gray-700">Emergency Contact</p>
             {isEditing ? (
               <Input
                 type="text"
@@ -271,10 +352,12 @@ export default function PatientHeader({ patient: initialPatient }: PatientHeader
         </div>
 
         {/* Insurance */}
-        <div className="flex items-start gap-3">
-          <FileText className="mt-1 h-4 w-4 text-zinc-400" />
+        <div className="flex items-start gap-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-blue-100">
+            <FileText className="h-5 w-5 text-blue-600" />
+          </div>
           <div>
-            <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">Insurance</p>
+            <p className="text-sm font-semibold text-gray-700">Insurance</p>
             {isEditing ? (
               <Input
                 type="text"

@@ -70,7 +70,7 @@ export function WebsiteShortcutContextMenu({
               className="fixed inset-0 z-10"
               onClick={() => setShowMenu(false)}
             />
-            <div className="absolute right-0 top-8 z-20 w-48 rounded-lg border border-black/10 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-900">
+            <div className="absolute right-0 top-8 z-20 w-48 rounded-lg border border-gray-200 bg-white shadow-lg">
               <a
                 href={url}
                 target="_blank"
@@ -79,7 +79,7 @@ export function WebsiteShortcutContextMenu({
                   e.stopPropagation()
                   setShowMenu(false)
                 }}
-                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-black/5 dark:hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-white/5"
               >
                 <ExternalLink className="h-4 w-4" />
                 Open Link
@@ -90,7 +90,7 @@ export function WebsiteShortcutContextMenu({
                   setShowMenu(false)
                   setShowConfirm(true)
                 }}
-                className="flex w-full items-center gap-2 border-t border-black/10 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 dark:border-white/10 dark:text-red-400 dark:hover:bg-red-950/20"
+                className="flex w-full items-center gap-2 border-t border-gray-200 px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete
@@ -102,10 +102,10 @@ export function WebsiteShortcutContextMenu({
 
       {/* Confirmation Modal */}
       {showConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-xl border border-black/10 bg-white p-6 shadow-xl dark:border-white/10 dark:bg-zinc-900">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/50 p-4">
+          <div className="w-full max-w-md rounded-xl border border-gray-200 bg-white p-6 shadow-xl">
             <h2 className="mb-2 text-lg font-semibold">Delete Website</h2>
-            <p className="mb-6 text-sm text-zinc-600 dark:text-zinc-400">
+            <p className="mb-6 text-sm text-gray-600">
               Are you sure you want to delete <strong>"{title}"</strong>? This action cannot be undone.
             </p>
             <div className="flex gap-3">
@@ -120,7 +120,7 @@ export function WebsiteShortcutContextMenu({
               <Button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700"
+                className="flex-1 bg-red-600 hover:bg-red-700"
               >
                 {deleting ? "Deleting..." : "Delete"}
               </Button>
