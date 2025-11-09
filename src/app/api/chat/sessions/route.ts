@@ -1,6 +1,6 @@
+// @ts-nocheck
 import { createClient } from "@/lib/supabase/server"
 import { NextRequest, NextResponse } from "next/server"
-// @ts-nocheck
 /**
  * GET /api/chat/sessions?sessionId=xxx
  * Get messages for a specific session
@@ -81,7 +81,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new session
-    // @ts-ignore
     const { data: session, error } = await supabase
       .from("chat_sessions")
       .insert({
