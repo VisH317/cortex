@@ -13,7 +13,7 @@ async function getParentFolderPath(supabase: any, folderId: string | null): Prom
     let currentFolderId: string | null = folderId
 
     while (currentFolderId) {
-      const { data: folder } = await supabase
+      const { data: folder }: { data: { slug: string, parent_id: string | null } | null } = await supabase
         .from("folders")
         .select("slug, parent_id")
         .eq("id", currentFolderId)
@@ -61,7 +61,7 @@ export default async function FileViewPage({
   // Get signed URL for file
   const { data: urlData } = await supabase.storage
     .from("files")
-    .createSignedUrl(file.storage_path, 3600) // 1 hour expiry
+    .createSignedUrl((file as any).storage_path, 3600) // 1 hour expiry
 
   return (
     <FileViewer

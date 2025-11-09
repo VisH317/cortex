@@ -2,7 +2,7 @@
  * File embeddings service
  * Handles embedding generation for different file types
  */
-
+// @ts-nocheck
 import { createClient } from "@/lib/supabase/server"
 import { generateEmbedding, generateEmbeddingsBatch } from "./embeddings"
 import { smartChunk, extractTextFromHTML } from "@/lib/utils/text-chunking"

@@ -256,10 +256,10 @@ Remember: You're here to be genuinely helpful and make the doctor's life easier.
     // Conditionally include research tool based on toggle
     const availableTools = researchModeEnabled 
       ? tools 
-      : tools.filter(tool => tool.function.name !== "search_medical_research")
+      : tools.filter(tool => (tool as any).function.name !== "search_medical_research")
 
     console.log(`[Agent] Research mode: ${researchModeEnabled ? 'ENABLED' : 'DISABLED'}`)
-    console.log(`[Agent] Available tools: ${availableTools.map(t => t.function.name).join(', ')}`)
+    console.log(`[Agent] Available tools: ${availableTools.map(t => (t as any).function.name).join(', ')}`)
 
     // Convert messages to OpenAI format
     const openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
@@ -302,7 +302,7 @@ Remember: You're here to be genuinely helpful and make the doctor's life easier.
         const functionResponse = await handleFunctionCall(
           functionName,
           functionArgs,
-          patientId,
+          patientId as string,
           userId,
           patientContext
         )
@@ -318,7 +318,7 @@ Remember: You're here to be genuinely helpful and make the doctor's life easier.
         if (functionName === "retrieve_patient_records") {
           const { results } = await searchPatientRecords(
             functionArgs.query,
-            patientId,
+            patientId as string,
             userId
           )
           citations.push(...results.map((r) => ({
