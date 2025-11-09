@@ -32,6 +32,7 @@ import { WebsiteShortcutModal } from "./WebsiteShortcutModal"
 import { FolderContextMenu } from "./FolderContextMenu"
 import { FileContextMenu } from "./FileContextMenu"
 import { WebsiteShortcutContextMenu } from "./WebsiteShortcutContextMenu"
+import ImageAnalysisModal from "./ImageAnalysisModal"
 import type { Folder, File as FileType, WebsiteShortcut } from "@/types/database.types"
 import { buildSlugPath } from "@/lib/utils/slugify"
 import { moveFile, moveWebsiteShortcut } from "@/lib/actions/files"
@@ -65,6 +66,8 @@ export default function VaultContent({
   const [draggedItem, setDraggedItem] = useState<{ type: string; id: string } | null>(null)
   const [dropTarget, setDropTarget] = useState<string | null>(null)
   const [breadcrumbFolders, setBreadcrumbFolders] = useState<Map<number, string>>(new Map())
+  const [selectedFileForAnalysis, setSelectedFileForAnalysis] = useState<FileType | null>(null)
+  const [analysisImageUrl, setAnalysisImageUrl] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -274,6 +277,18 @@ export default function VaultContent({
     })
   }
 
+  const handleAnalyzeImage = async (file: FileType) => {
+    // Get signed URL for the image
+    const { data: signedUrlData } = await supabase.storage
+      .from("files")
+      .createSignedUrl(file.storage_path, 3600)
+
+    if (signedUrlData) {
+      setAnalysisImageUrl(signedUrlData.signedUrl)
+      setSelectedFileForAnalysis(file)
+    }
+  }
+
   const currentPath = buildSlugPath(slugPath)
   const allItems = [
     ...folders.map((f) => ({ ...f, itemType: "folder" as const })),
@@ -463,10 +478,12 @@ export default function VaultContent({
                           fileId={item.id}
                           fileName={item.name}
                           storagePath={item.storage_path}
+                          mimeType={item.mime_type}
                           onDelete={() => {
                             refetchContent()
                             router.refresh()
                           }}
+                          onAnalyzeImage={() => handleAnalyzeImage(item)}
                         />
                       </div>
                       <div className="mb-3 flex h-24 items-center justify-center rounded-lg bg-zinc-50 dark:bg-zinc-800">
@@ -589,10 +606,12 @@ export default function VaultContent({
                           fileId={item.id}
                           fileName={item.name}
                           storagePath={item.storage_path}
+                          mimeType={item.mime_type}
                           onDelete={() => {
                             refetchContent()
                             router.refresh()
                           }}
+                          onAnalyzeImage={() => handleAnalyzeImage(item)}
                         />
                       </div>
                     </div>
@@ -673,6 +692,20 @@ export default function VaultContent({
           onSuccess={async () => {
             await refetchContent()
             router.refresh()
+          }}
+        />
+      )}
+
+      {/* Image Analysis Modal */}
+      {selectedFileForAnalysis && (
+        <ImageAnalysisModal
+          fileId={selectedFileForAnalysis.id}
+          fileName={selectedFileForAnalysis.name}
+          imageUrl={analysisImageUrl}
+          isOpen={!!selectedFileForAnalysis}
+          onClose={() => {
+            setSelectedFileForAnalysis(null)
+            setAnalysisImageUrl(null)
           }}
         />
       )}

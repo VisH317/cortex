@@ -1,22 +1,27 @@
 "use client"
 
 import { useState } from "react"
-import { MoreVertical, Trash2, Download } from "lucide-react"
+import { MoreVertical, Trash2, Download, Scan } from "lucide-react"
 import { Button } from "./ui/button"
 import { createClient } from "@/lib/supabase/client"
+import { isImageFile } from "@/lib/utils/file-utils"
 
 interface FileContextMenuProps {
   fileId: string
   fileName: string
   storagePath: string
+  mimeType?: string
   onDelete: () => void
+  onAnalyzeImage?: () => void
 }
 
-export function FileContextMenu({ fileId, fileName, storagePath, onDelete }: FileContextMenuProps) {
+export function FileContextMenu({ fileId, fileName, storagePath, mimeType, onDelete, onAnalyzeImage }: FileContextMenuProps) {
   const [showMenu, setShowMenu] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const supabase = createClient()
+  
+  const isImage = isImageFile(mimeType || "", fileName)
 
   const handleDelete = async () => {
     setDeleting(true)
@@ -73,6 +78,19 @@ export function FileContextMenu({ fileId, fileName, storagePath, onDelete }: Fil
               onClick={() => setShowMenu(false)}
             />
             <div className="absolute right-0 top-8 z-20 w-48 rounded-lg border border-black/10 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-900">
+              {isImage && onAnalyzeImage && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowMenu(false)
+                    onAnalyzeImage()
+                  }}
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/20"
+                >
+                  <Scan className="h-4 w-4" />
+                  Check Image
+                </button>
+              )}
               <button
                 onClick={(e) => {
                   e.stopPropagation()

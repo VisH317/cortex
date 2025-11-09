@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   },
   /* config options here */
   reactCompiler: true,
+  turbopack: {
+    resolveAlias: {
+      // Ensure react-markdown works correctly
+      'react-markdown': 'react-markdown',
+    },
+  },
 };
 
 export default nextConfig;

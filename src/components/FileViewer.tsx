@@ -15,9 +15,11 @@ import {
   Image as ImageIcon,
   Music,
   Video as VideoIcon,
+  Scan,
 } from "lucide-react"
 import { Button } from "./ui/button"
 import { createClient } from "@/lib/supabase/client"
+import ImageAnalysisModal from "./ImageAnalysisModal"
 import type { File as FileType } from "@/types/database.types"
 import { 
   getLanguageFromExtension, 
@@ -39,6 +41,7 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
   const [error, setError] = useState<string | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [showAnalysisModal, setShowAnalysisModal] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -382,6 +385,17 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
               Embeddings: <span className="font-medium">{file.embedding_status}</span>
             </div>
           )}
+          {isImage && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAnalysisModal(true)}
+              className="gap-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-950/20"
+            >
+              <Scan className="h-4 w-4" />
+              Check Image
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handleDownload} className="gap-2">
             <Download className="h-4 w-4" />
             Download
@@ -451,6 +465,17 @@ export default function FileViewer({ file, signedUrl }: FileViewerProps) {
           </div>
         )}
       </main>
+
+      {/* Image Analysis Modal */}
+      {isImage && (
+        <ImageAnalysisModal
+          fileId={file.id}
+          fileName={file.name}
+          imageUrl={signedUrl}
+          isOpen={showAnalysisModal}
+          onClose={() => setShowAnalysisModal(false)}
+        />
+      )}
     </div>
   )
 }
