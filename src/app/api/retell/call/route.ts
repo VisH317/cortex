@@ -69,26 +69,26 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    console.log(`[Retell] Initiating call to patient: ${patient.name} (${phoneNumber})`)
+    console.log(`[Retell] Initiating call to patient: ${(patient as any).name} (${phoneNumber})`)
 
     // Create patient summary for the AI agent
-    const summaryParts = [`Patient Name: ${patient.name}`]
+    const summaryParts = [`Patient Name: ${(patient as any).name}`]
     
-    if (patient.age) summaryParts.push(`Age: ${patient.age} years old`)
-    if (patient.gender) summaryParts.push(`Gender: ${patient.gender.replace(/_/g, ' ')}`)
-    if (patient.blood_type) summaryParts.push(`Blood Type: ${patient.blood_type}`)
-    if (patient.date_of_birth) {
-      const dob = new Date(patient.date_of_birth).toLocaleDateString('en-US', {
+    if ((patient as any).age) summaryParts.push(`Age: ${(patient as any).age} years old`)
+    if ((patient as any).gender) summaryParts.push(`Gender: ${(patient as any).gender.replace(/_/g, ' ')}`)
+    if ((patient as any).blood_type) summaryParts.push(`Blood Type: ${(patient as any).blood_type}`)
+    if ((patient as any).date_of_birth) {
+      const dob = new Date((patient as any).date_of_birth).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       })
       summaryParts.push(`Date of Birth: ${dob}`)
     }
-    if (patient.phone) summaryParts.push(`Phone: ${patient.phone}`)
-    if (patient.address) summaryParts.push(`Address: ${patient.address}`)
-    if (patient.emergency_contact) summaryParts.push(`Emergency Contact: ${patient.emergency_contact}`)
-    if (patient.insurance_info) summaryParts.push(`Insurance: ${patient.insurance_info}`)
+    if ((patient as any).phone) summaryParts.push(`Phone: ${(patient as any).phone}`)
+    if ((patient as any).address) summaryParts.push(`Address: ${(patient as any).address}`)
+    if ((patient as any).emergency_contact) summaryParts.push(`Emergency Contact: ${(patient as any).emergency_contact}`)
+    if ((patient as any).insurance_info) summaryParts.push(`Insurance: ${(patient as any).insurance_info}`)
     
     const patientSummary = summaryParts.join('. ') + '.'
 
@@ -133,12 +133,12 @@ export async function POST(request: NextRequest) {
       override_agent_id: configuredAgentId,
       metadata: {
         patient_id: patientId,
-        patient_name: patient.name,
+        patient_name: (patient as any).name,
         user_id: user.id,
       },
       // Add custom variables for the agent
       retell_llm_dynamic_variables: {
-        patient_name: patient.name,
+        patient_name: (patient as any).name,
         patient_summary: patientSummary,
       },
     }
@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
       success: true,
       callId: result.call_id,
       status: result.call_status,
-      message: `Call initiated to ${patient.name}`,
+      message: `Call initiated to ${(patient as any).name}`,
     })
   } catch (error: any) {
     console.error("[Retell] Error initiating call:", error)

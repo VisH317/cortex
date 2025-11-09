@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new session
+    // @ts-ignore
     const { data: session, error } = await supabase
       .from("chat_sessions")
       .insert({

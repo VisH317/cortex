@@ -40,7 +40,7 @@ export default async function PatientFolderPage({
 
   // Get folder contents
   const { folders, files, shortcuts } = await getFolderContents(
-    currentFolder?.id || null,
+    (currentFolder as any).id || null,
     patientId
   )
 

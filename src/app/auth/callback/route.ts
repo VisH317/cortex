@@ -20,6 +20,7 @@ export async function GET(request: Request) {
         .single()
 
       if (!profile) {
+        // @ts-ignore
         await supabase.from("profiles").insert({
           id: data.user.id,
           email: data.user.email! as string,

@@ -53,6 +53,7 @@ export default function AuthPage() {
 
         if (data.user) {
           // Create profile
+          // @ts-ignore
           const { error: profileError } = await supabase
             .from("profiles")
             .insert({
