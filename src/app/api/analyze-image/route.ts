@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     // Get signed URL for the image
     const { data: signedUrlData, error: urlError } = await supabase.storage
       .from("files")
-      .createSignedUrl(file.storage_path, 3600) // 1 hour expiry
+      .createSignedUrl((file as any).storage_path, 3600) // 1 hour expiry
 
     if (urlError || !signedUrlData) {
       return NextResponse.json(
@@ -79,10 +79,10 @@ Next steps or additional tests needed
 - Note this is AI-assisted analysis, not definitive diagnosis
 - Use clear medical terminology`
 
-    const userPrompt = `Analyze this medical image: "${file.name}". Keep response concise and structured. If not a medical image, state that clearly.`
+    const userPrompt = `Analyze this medical image: "${(file as any).name}". Keep response concise and structured. If not a medical image, state that clearly.`
 
     // Call OpenAI GPT-4 Vision API
-    console.log("[Image Analysis] Analyzing image:", file.name)
+    console.log("[Image Analysis] Analyzing image:", (file as any).name)
     
     const response = await openai.chat.completions.create({
       model: "gpt-4-turbo",
@@ -114,13 +114,13 @@ Next steps or additional tests needed
 
     const analysis = response.choices[0].message.content
 
-    console.log("[Image Analysis] Analysis completed for:", file.name)
+    console.log("[Image Analysis] Analysis completed for:", (file as any).name)
 
     return NextResponse.json({
       success: true,
       analysis,
-      fileName: file.name,
-      fileType: file.mime_type,
+      fileName: (file as any).name,
+      fileType: (file as any).mime_type,
       disclaimer: "This is an AI-assisted analysis and should not be considered a definitive medical diagnosis. Always consult with qualified healthcare professionals for proper medical evaluation and treatment decisions.",
     })
   } catch (error: any) {

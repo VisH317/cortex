@@ -171,13 +171,13 @@ For questions or concerns, please contact your healthcare provider.
       throw new Error(`Failed to create file record: ${dbError.message}`)
     }
 
-    console.log("[Retell Webhook] File record created:", fileRecord.id)
+    console.log("[Retell Webhook] File record created:", (fileRecord as any).id)
 
     // Trigger embedding generation in background
     fetch(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/embeddings/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fileId: fileRecord.id }),
+      body: JSON.stringify({ fileId: (fileRecord as any).id }),
     }).catch((err) => {
       console.error("[Retell Webhook] Failed to trigger embedding generation:", err)
     })
