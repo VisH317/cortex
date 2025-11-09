@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { X, Send, Bot, User, Loader2, FileText, MessageSquare } from "lucide-react"
+import { X, Send, Brain, User, Loader2, FileText, GraduationCap } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
@@ -30,6 +30,7 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [sessionId, setSessionId] = useState<string | null>(null)
+  const [researchModeEnabled, setResearchModeEnabled] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -70,6 +71,7 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
           patientId,
           patientName,
           sessionId,
+          researchModeEnabled,
         }),
       })
 
@@ -117,29 +119,19 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
   return (
     <AnimatePresence>
       {isOpen && (
-        <>
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="fixed inset-0 z-40 bg-black/20 backdrop-blur-sm"
-          />
-
-          {/* Chat Sidebar */}
-          <motion.div
-            initial={{ x: "100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "100%" }}
-            transition={{ type: "spring", damping: 30, stiffness: 300 }}
-            className="fixed right-0 top-0 bottom-0 z-50 flex w-full max-w-md flex-col border-l border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-zinc-900"
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-black/10 p-4 dark:border-white/10">
+        <motion.div
+          initial={{ width: 0, opacity: 0 }}
+          animate={{ width: "28rem", opacity: 1 }}
+          exit={{ width: 0, opacity: 0 }}
+          transition={{ type: "spring", damping: 30, stiffness: 300 }}
+          className="flex h-full flex-col border-l border-black/10 bg-white shadow-2xl dark:border-white/10 dark:bg-zinc-900 overflow-hidden"
+        >
+          {/* Header */}
+          <div className="flex flex-col border-b border-black/10 dark:border-white/10">
+            <div className="flex items-center justify-between p-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500">
-                  <Bot className="h-6 w-6 text-white" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-white border border-black/20">
+                  <Brain className="h-6 w-6 text-black" />
                 </div>
                 <div>
                   <h2 className="font-semibold">Medical AI Assistant</h2>
@@ -155,117 +147,142 @@ export default function ChatAgent({ patientId, patientName, isOpen, onClose }: C
                 <X className="h-5 w-5" />
               </button>
             </div>
+            
+            {/* Research Mode Toggle */}
+            <div className="flex items-center gap-2 px-4 pb-3">
+              <button
+                onClick={() => setResearchModeEnabled(!researchModeEnabled)}
+                className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  researchModeEnabled
+                    ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                    : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                }`}
+              >
+                <GraduationCap className="h-4 w-4" />
+                <span>Research Mode</span>
+                <div
+                  className={`h-2 w-2 rounded-full ${
+                    researchModeEnabled ? "bg-blue-500" : "bg-zinc-400"
+                  }`}
+                />
+              </button>
+              {researchModeEnabled && (
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                  Can search scholarly articles
+                </p>
+              )}
+            </div>
+          </div>
 
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center text-center">
-                  <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-950">
-                    <MessageSquare className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                  </div>
-                  <h3 className="mb-2 text-lg font-semibold">Start a Conversation</h3>
-                  <p className="max-w-xs text-sm text-zinc-600 dark:text-zinc-400">
-                    Ask me anything about {patientName}'s medical records, or search for medical research.
-                  </p>
-                  <div className="mt-6 space-y-2 text-sm">
-                    <p className="text-zinc-500">Try asking:</p>
-                    <div className="space-y-1">
-                      <div className="rounded-lg bg-zinc-100 p-2 text-left dark:bg-zinc-800">
-                        "What are the recent test results?"
-                      </div>
-                      <div className="rounded-lg bg-zinc-100 p-2 text-left dark:bg-zinc-800">
-                        "Search for treatments for hypertension"
-                      </div>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {messages.length === 0 ? (
+              <div className="flex h-full flex-col items-center justify-center text-center">
+                <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white border-2 border-black/20">
+                  <Brain className="h-8 w-8 text-black" />
+                </div>
+                <h3 className="mb-2 text-lg font-semibold">Start a Conversation</h3>
+                <p className="max-w-xs text-sm text-zinc-600 dark:text-zinc-400">
+                  Ask me anything about {patientName}'s medical records, or search for medical research.
+                </p>
+                <div className="mt-6 space-y-2 text-sm">
+                  <p className="text-zinc-500">Try asking:</p>
+                  <div className="space-y-1">
+                    <div className="rounded-lg bg-zinc-100 p-2 text-left dark:bg-zinc-800">
+                      "What are the recent test results?"
+                    </div>
+                    <div className="rounded-lg bg-zinc-100 p-2 text-left dark:bg-zinc-800">
+                      "Search for treatments for hypertension"
                     </div>
                   </div>
                 </div>
-              ) : (
-                messages.map((message) => (
+              </div>
+            ) : (
+              messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex gap-3 ${
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  }`}
+                >
+                  {message.role === "assistant" && (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-black/20">
+                      <Brain className="h-5 w-5 text-black" />
+                    </div>
+                  )}
                   <div
-                    key={message.id}
-                    className={`flex gap-3 ${
-                      message.role === "user" ? "justify-end" : "justify-start"
+                    className={`max-w-[80%] space-y-2 ${
+                      message.role === "user"
+                        ? "rounded-2xl rounded-tr-sm bg-blue-600 p-3 text-white"
+                        : "rounded-2xl rounded-tl-sm bg-zinc-100 p-3 dark:bg-zinc-800"
                     }`}
                   >
-                    {message.role === "assistant" && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500">
-                        <Bot className="h-5 w-5 text-white" />
+                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                    {message.citations && message.citations.length > 0 && (
+                      <div className="mt-2 space-y-1 border-t border-black/10 pt-2 dark:border-white/10">
+                        <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                          Sources:
+                        </p>
+                        {message.citations.slice(0, 3).map((citation, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400"
+                          >
+                            <FileText className="h-3 w-3 shrink-0 mt-0.5" />
+                            <span className="line-clamp-1">{citation.file_name}</span>
+                          </div>
+                        ))}
                       </div>
                     )}
-                    <div
-                      className={`max-w-[80%] space-y-2 ${
-                        message.role === "user"
-                          ? "rounded-2xl rounded-tr-sm bg-blue-600 p-3 text-white"
-                          : "rounded-2xl rounded-tl-sm bg-zinc-100 p-3 dark:bg-zinc-800"
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                      {message.citations && message.citations.length > 0 && (
-                        <div className="mt-2 space-y-1 border-t border-black/10 pt-2 dark:border-white/10">
-                          <p className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                            Sources:
-                          </p>
-                          {message.citations.slice(0, 3).map((citation, idx) => (
-                            <div
-                              key={idx}
-                              className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400"
-                            >
-                              <FileText className="h-3 w-3 shrink-0 mt-0.5" />
-                              <span className="line-clamp-1">{citation.file_name}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                  </div>
+                  {message.role === "user" && (
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700">
+                      <User className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
                     </div>
-                    {message.role === "user" && (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-zinc-200 dark:bg-zinc-700">
-                        <User className="h-5 w-5 text-zinc-600 dark:text-zinc-400" />
-                      </div>
-                    )}
-                  </div>
-                ))
-              )}
-              {isLoading && (
-                <div className="flex gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-500">
-                    <Bot className="h-5 w-5 text-white" />
-                  </div>
-                  <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-zinc-100 p-3 dark:bg-zinc-800">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-zinc-600 dark:text-zinc-400">Thinking...</span>
-                  </div>
+                  )}
                 </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input */}
-            <div className="border-t border-black/10 p-4 dark:border-white/10">
-              <div className="flex gap-2">
-                <Input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="Ask about medical records or research..."
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  disabled={isLoading}
-                  className="flex-1"
-                />
-                <Button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  className="gap-2"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+              ))
+            )}
+            {isLoading && (
+              <div className="flex gap-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white border border-black/20">
+                  <Brain className="h-5 w-5 text-black" />
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl rounded-tl-sm bg-zinc-100 p-3 dark:bg-zinc-800">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span className="text-sm text-zinc-600 dark:text-zinc-400">Thinking...</span>
+                </div>
               </div>
-              <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
-                AI may make mistakes. Verify important information.
-              </p>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="border-t border-black/10 p-4 dark:border-white/10">
+            <div className="flex gap-2">
+              <Input
+                ref={inputRef}
+                type="text"
+                placeholder="Ask about medical records or research..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={isLoading}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || isLoading}
+                className="gap-2"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
-          </motion.div>
-        </>
+            <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
+              AI may make mistakes. Verify important information.
+            </p>
+          </div>
+        </motion.div>
       )}
     </AnimatePresence>
   )

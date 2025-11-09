@@ -105,6 +105,12 @@ export default function VaultContent({
         query = query.is("parent_id", null)
       }
       
+      if (patientId) {
+        query = query.eq("patient_id", patientId)
+      } else {
+        query = query.is("patient_id", null)
+      }
+      
       const { data } = await query.single()
       
       if (data) {
@@ -117,7 +123,15 @@ export default function VaultContent({
   }
 
   const fetchAllFolders = async () => {
-    const { data } = await supabase.from("folders").select("*").order("name")
+    let query = supabase.from("folders").select("*")
+    
+    if (patientId) {
+      query = query.eq("patient_id", patientId)
+    } else {
+      query = query.is("patient_id", null)
+    }
+    
+    const { data } = await query.order("name")
     if (data) setAllFolders(data)
   }
 
@@ -126,6 +140,26 @@ export default function VaultContent({
     if (!user) return
 
     const folderId = currentFolder?.id || null
+
+    // Refetch folders
+    let foldersQuery = supabase
+      .from("folders")
+      .select("*")
+      .eq("user_id", user.id)
+
+    if (folderId) {
+      foldersQuery = foldersQuery.eq("parent_id", folderId)
+    } else {
+      foldersQuery = foldersQuery.is("parent_id", null)
+    }
+
+    if (patientId) {
+      foldersQuery = foldersQuery.eq("patient_id", patientId)
+    } else {
+      foldersQuery = foldersQuery.is("patient_id", null)
+    }
+
+    const { data: foldersData } = await foldersQuery.order("name", { ascending: true })
 
     // Refetch files
     let filesQuery = supabase
@@ -137,6 +171,12 @@ export default function VaultContent({
       filesQuery = filesQuery.eq("folder_id", folderId)
     } else {
       filesQuery = filesQuery.is("folder_id", null)
+    }
+
+    if (patientId) {
+      filesQuery = filesQuery.eq("patient_id", patientId)
+    } else {
+      filesQuery = filesQuery.is("patient_id", null)
     }
 
     const { data: filesData } = await filesQuery.order("created_at", { ascending: false })
@@ -155,6 +195,7 @@ export default function VaultContent({
 
     const { data: shortcutsData } = await shortcutsQuery.order("created_at", { ascending: false })
 
+    if (foldersData) setFolders(foldersData)
     if (filesData) setFiles(filesData)
     if (shortcutsData) setShortcuts(shortcutsData)
   }
@@ -264,7 +305,7 @@ export default function VaultContent({
           {/* Breadcrumbs */}
           <div className="flex items-center gap-2 text-sm">
             <button
-              onClick={() => router.push("/vault/home")}
+              onClick={() => router.push("/vault")}
               onDragOver={(e) => handleDragOver(e, "breadcrumb", "root")}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, null)}

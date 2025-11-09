@@ -5,6 +5,7 @@
 
 import OpenAI from "openai"
 import { searchPatientRecords, formatRAGResultsForAgent } from "./rag"
+import { searchGoogleScholar, formatResearchResultsForAgent, type PatientContext } from "./research"
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -67,7 +68,8 @@ async function handleFunctionCall(
   functionName: string,
   functionArgs: any,
   patientId: string,
-  userId: string
+  userId: string,
+  patientContext?: PatientContext
 ): Promise<string> {
   if (functionName === "retrieve_patient_records") {
     const { query } = functionArgs
@@ -101,16 +103,29 @@ async function handleFunctionCall(
   if (functionName === "search_medical_research") {
     const { query } = functionArgs
 
-    // For now, return a placeholder response
-    // In production, you would integrate with a real medical research API
-    // like PubMed, Google Scholar, or a specialized medical search service
-    return `To search for medical research on "${query}", I recommend:
-    
-1. Checking PubMed (pubmed.ncbi.nlm.nih.gov) for peer-reviewed medical research
-2. Consulting medical databases like UpToDate or Medscape
-3. Reviewing clinical guidelines from relevant medical associations
+    console.log(`[Agent] Searching medical research with query: "${query}"`)
+    console.log(`[Agent] Patient context:`, patientContext)
 
-Note: This is a simulated response. In production, integrate with actual medical research APIs.`
+    // Search Google Scholar using SerpAPI with patient context
+    const { results, error } = await searchGoogleScholar(query, patientContext, {
+      maxResults: 5,
+    })
+
+    if (error) {
+      console.error(`[Agent] Error searching research: ${error}`)
+      return `Error searching research: ${error}`
+    }
+
+    console.log(`[Agent] Retrieved ${results.length} research results`)
+
+    if (results.length === 0) {
+      return "No research papers found for this query. Try rephrasing or using more specific medical terms."
+    }
+
+    // Format results for the assistant
+    const formatted = formatResearchResultsForAgent(results)
+    console.log(`[Agent] Formatted results length: ${formatted.length} characters`)
+    return formatted
   }
 
   return "Unknown function called"
@@ -139,7 +154,8 @@ export async function chatWithAgent(
     mime_type: string
     size_bytes: number
     created_at: string
-  }>
+  }>,
+  researchModeEnabled: boolean = false
 ): Promise<{
   response: string
   citations?: Array<{
@@ -208,6 +224,21 @@ ${filesInfo}
 
 Remember: You're here to be genuinely helpful and make the doctor's life easier. Be friendly, accurate, and always have their back! 💪`
 
+    // Prepare patient context for research queries
+    const patientContext: PatientContext = {
+      medical_history: patientInfo?.medical_history,
+      current_medications: patientInfo?.current_medications,
+      allergies: patientInfo?.allergies,
+    }
+
+    // Conditionally include research tool based on toggle
+    const availableTools = researchModeEnabled 
+      ? tools 
+      : tools.filter(tool => tool.function.name !== "search_medical_research")
+
+    console.log(`[Agent] Research mode: ${researchModeEnabled ? 'ENABLED' : 'DISABLED'}`)
+    console.log(`[Agent] Available tools: ${availableTools.map(t => t.function.name).join(', ')}`)
+
     // Convert messages to OpenAI format
     const openaiMessages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
       {
@@ -224,7 +255,7 @@ Remember: You're here to be genuinely helpful and make the doctor's life easier.
     let response = await openai.chat.completions.create({
       model: "gpt-4-turbo-preview",
       messages: openaiMessages,
-      tools: tools,
+      tools: availableTools,
       tool_choice: "auto",
       temperature: 0.7,
       max_tokens: 1000,
@@ -250,7 +281,8 @@ Remember: You're here to be genuinely helpful and make the doctor's life easier.
           functionName,
           functionArgs,
           patientId,
-          userId
+          userId,
+          patientContext
         )
 
         // Add function response to conversation
@@ -279,7 +311,7 @@ Remember: You're here to be genuinely helpful and make the doctor's life easier.
       response = await openai.chat.completions.create({
         model: "gpt-4-turbo-preview",
         messages: openaiMessages,
-        tools: tools,
+        tools: availableTools,
         tool_choice: "auto",
         temperature: 0.7,
         max_tokens: 1000,

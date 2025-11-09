@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { message, patientId, sessionId, patientName } = body
+    const { message, patientId, sessionId, patientName, researchModeEnabled } = body
 
     if (!message || !patientId) {
       return NextResponse.json(
@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
       user.id,
       patientName,
       patient || undefined,
-      files || undefined
+      files || undefined,
+      researchModeEnabled || false
     )
 
     if (error) {
